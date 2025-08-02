@@ -4,7 +4,7 @@
  */
  {
     "$schema": "node_modules/wrangler/config-schema.json",
-    "account_id": "82e5aa3e06eba55221231ef482269452",
+    "account_id": "1e9408c2be90eae9689a2b6942ca5d87",
     "name": "mulls-io-console",
     "main": ".open-next/worker.js",
     "compatibility_date": "2025-08-02",
