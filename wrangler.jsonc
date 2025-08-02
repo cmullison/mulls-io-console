@@ -39,9 +39,9 @@
      * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
      */
     "vars": {
-        "EMAIL_FROM": "no-reply@notifications.mulls.io",
+        "EMAIL_FROM": "no-reply@updates.mulls.io",
         "EMAIL_FROM_NAME": "Mulls.io",
-        "EMAIL_REPLY_TO": "support@mulls.io"
+        "EMAIL_REPLY_TO": "support@updates.mulls.io"
     },
     /**
      * Note: Use secrets to store sensitive data.
