@@ -6,7 +6,7 @@
     "$schema": "node_modules/wrangler/config-schema.json",
     "account_id": "1e9408c2be90eae9689a2b6942ca5d87",
     "name": "mulls-io-console",
-    "main": ".open-next/worker.js",
+    "main": "agents-worker.js",
     "compatibility_date": "2025-08-02",
     "compatibility_flags": [
       "nodejs_compat",
@@ -66,7 +66,27 @@
         {
           "name": "NEXT_CACHE_DO_QUEUE",
           "class_name": "DOQueueHandler",
-        }
+        },
+        {
+        "class_name": "Sequential",
+        "name": "sequential"
+      },
+      {
+        "class_name": "Routing",
+        "name": "routing"
+      },
+      {
+        "class_name": "Parallel",
+        "name": "parallel"
+      },
+      {
+        "class_name": "Orchestrator",
+        "name": "orchestrator"
+      },
+      {
+        "class_name": "Evaluator",
+        "name": "evaluator"
+      }
       ]
     },
 
@@ -74,6 +94,16 @@
       {
         "tag": "v1",
         "new_sqlite_classes": ["DOQueueHandler"],
+      },
+      {
+        "tag": "v2",
+        "new_sqlite_classes": [
+        "Sequential",
+        "Routing",
+        "Parallel",
+        "Orchestrator",
+        "Evaluator"
+      ]
       },
     ],
 

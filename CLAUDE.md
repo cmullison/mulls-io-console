@@ -1,66 +1,84 @@
 Please see .cursor/rules/ for a comprehensive overview of this project and its stack
 
+The entry point to this worker is at .open-next/worker.js
+
+## AI Agents Implementation
+
+**✅ COMPLETED: Cloudflare Agents Integration**
+
+### Architecture Overview
+This project implements AI agents using Cloudflare's Agents SDK with Durable Objects for persistent, real-time WebSocket communication. The implementation supports both development (Next.js API routes) and production (Cloudflare Workers with Durable Objects).
+
+### Key Components
+
+#### 1. **Worker Entry Point**
+- **File**: `agents-worker.js` (referenced in `wrangler.jsonc`)
+- **Purpose**: Custom worker that combines OpenNext (Next.js) with Cloudflare Agents routing
+- **Functionality**: 
+  - Routes WebSocket requests to `/agents/*` paths to Durable Objects
+  - Falls back to OpenNext worker for all other requests
+  - Exports all agent Durable Object classes
+
+#### 2. **Agent Durable Objects** 
+- **Location**: Defined inline in `agents-worker.js`
+- **Classes**: Sequential, Routing, Parallel, Orchestrator, Evaluator
+- **Features**:
+  - WebSocket-based real-time communication
+  - Persistent state across browser sessions
+  - Integrated with OpenAI via Cloudflare AI Gateway
+  - Toast notifications and status updates
+
+#### 3. **Frontend Integration**
+- **File**: `src/app/(dashboard)/dashboard/agents/page.tsx`
+- **Hook**: Uses `useAgent` from `agents/react` package
+- **UI**: Modern Shadcn components with real-time status updates
+- **Communication**: WebSocket connections to Durable Objects
+
+#### 4. **Environment Variables** 
+Required for production deployment:
+```
+OPENAI_API_KEY=your_openai_key
+AI_GATEWAY_ACCOUNT_ID=your_cloudflare_account_id  
+AI_GATEWAY_ID=your_gateway_id
+AI_GATEWAY_TOKEN=your_gateway_token
+```
+
+#### 5. **Durable Object Configuration**
+- **File**: `wrangler.jsonc`
+- **Bindings**: Sequential, Routing, Parallel, Orchestrator, Evaluator
+- **Migration**: v2 tag for agent classes deployment
+
+### Agent Patterns Implemented
+
+1. **Sequential (Prompt Chaining)**: Decomposes tasks into sequential steps with quality checks
+2. **Routing**: Classifies input and routes to specialized handlers  
+3. **Parallel**: Runs multiple reviews (security, performance, maintainability) concurrently
+4. **Orchestrator**: Dynamically breaks down complex tasks into worker LLMs
+5. **Evaluator**: Iterative translation with quality evaluation and improvement loops
+
+### Deployment Architecture
+
+**Development**: 
+- Next.js dev server with API routes at `/api/agents/*`
+- HTTP-based communication for local testing
+
+**Production**:
+- Cloudflare Workers with Durable Objects
+- WebSocket-based real-time communication
+- Global edge deployment with persistent state
+
+### Technical Benefits
+
+- **Real-time Updates**: WebSocket streaming of agent progress
+- **Persistent State**: Agents survive browser refreshes  
+- **Global Scale**: Edge deployment with low latency
+- **Cost Effective**: Pay-per-use compute model
+- **Memory Isolation**: Each agent runs independently
+
+This implementation follows Anthropic's research on building effective agents while leveraging Cloudflare's infrastructure for production-grade deployment.
+
 To do:
 
 - ✅ Upgrade to tailwind 4 (COMPLETED)
+- ✅ AI Agents with Cloudflare Durable Objects (COMPLETED)
 - Update the color palette in `src/app/globals.css`
-
-## Tailwind 4 Upgrade Assessment
-
-**Complexity: LOW-MEDIUM** (4-6 hours estimated)
-
-**Current State:**
-- Tailwind 3.4.1 with standard shadcn/ui setup
-- 114 class occurrences across 10+ files
-- HeroUI component library integration
-- Extensive CSS variables in globals.css
-
-**Key Breaking Changes:**
-- CSS-first configuration (no more JS config)
-- `@import "tailwindcss"` instead of `@tailwind` directives
-- Important modifier syntax: `!h-10` → `h-10!`
-- CSS variable syntax: `mr-[var(--x)]` → `mr-(--x)`
-- Border utility no longer defaults to gray-200
-- Requires Node.js 20+ for migration tool
-
-**Migration Steps:**
-1. Create upgrade branch
-2. Update to Node.js 20+
-3. Run `pnpm add tailwindcss@^4.0.0`
-4. Use Tailwind's automated migration tool
-5. Convert tailwind.config.ts to CSS-first approach
-6. Update globals.css imports
-7. Fix syntax breaking changes
-8. Test HeroUI compatibility
-9. Visual regression testing
-
-**Risk Factors:**
-- HeroUI compatibility needs verification
-- Custom CSS variables may need adjustment
-- Drops support for older browsers (Safari <16.4, Chrome <111)
-
-## ✅ Upgrade Completed Successfully
-
-**Date:** 2025-08-02  
-**Actual Time:** ~1 hour  
-**Branch:** tailwind-v4-upgrade
-
-**Changes Made:**
-1. ✅ Updated Tailwind CSS to v4.1.11
-2. ✅ Installed @tailwindcss/postcss plugin  
-3. ✅ Converted tailwind.config.ts to simplified v4 format
-4. ✅ Migrated theme configuration to CSS @theme blocks in globals.css
-5. ✅ Updated PostCSS configuration
-6. ✅ Replaced @tailwind directives with @import "tailwindcss"
-7. ✅ Added dark mode theme with @theme reference(dark)
-8. ✅ Verified build process works correctly
-9. ✅ Confirmed HeroUI compatibility
-10. ✅ Passed linting
-
-**Performance Improvements:**
-- Build process now uses Tailwind v4's high-performance engine
-- Expected 5x faster full builds, 100x faster incremental builds
-
-**Next Steps:**
-- Merge to main branch when ready
-- Monitor for any visual regressions in production

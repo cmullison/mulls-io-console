@@ -1,0 +1,316 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Copy, 
+  Check, 
+  Zap, 
+  FileText, 
+  Code, 
+  Sparkles 
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type WorkflowType = "sequential" | "routing" | "parallel" | "orchestrator" | "evaluator";
+
+interface OutputDisplayProps {
+  output: any;
+  onCopy: (text: string) => void;
+  copiedText: string;
+  type: WorkflowType;
+}
+
+export function OutputDisplay({
+  output,
+  onCopy,
+  copiedText,
+  type,
+}: OutputDisplayProps) {
+  // Special handling for Orchestrator output (file changes)
+  if (type === "orchestrator" && output.changes) {
+    return (
+      <div className="space-y-4">
+        <Card className="p-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <Label className="font-medium">Implementation Plan</Label>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Complexity:</span>
+                <Badge variant="outline" className={cn(
+                  output.plan?.estimatedComplexity === "high" ? "border-red-200 text-red-700" :
+                  output.plan?.estimatedComplexity === "medium" ? "border-yellow-200 text-yellow-700" :
+                  "border-green-200 text-green-700"
+                )}>
+                  {output.plan?.estimatedComplexity || "Unknown"}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Files:</span>
+                <Badge variant="secondary">{output.plan?.files?.length || 0} files</Badge>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <div className="space-y-3">
+          <Label className="font-medium flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            File Changes
+          </Label>
+          {output.changes?.map((change: any, index: number) => (
+            <Card key={index} className="p-4 bg-muted/20">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={cn(
+                      change.file?.changeType === "create" ? "border-green-200 text-green-700" :
+                      change.file?.changeType === "modify" ? "border-blue-200 text-blue-700" :
+                      "border-red-200 text-red-700"
+                    )}>
+                      {change.file?.changeType}
+                    </Badge>
+                    <code className="text-xs bg-muted px-2 py-1 rounded">
+                      {change.file?.filePath}
+                    </code>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onCopy(change.implementation?.code || "")}
+                    className="h-6 px-2 text-xs"
+                  >
+                    {copiedText === change.implementation?.code ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">{change.file?.purpose}</p>
+                {change.implementation?.explanation && (
+                  <p className="text-sm">{change.implementation.explanation}</p>
+                )}
+                {change.implementation?.code && (
+                  <pre className="bg-muted/50 p-3 rounded-md text-xs overflow-x-auto">
+                    <code>{change.implementation.code}</code>
+                  </pre>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Special handling for Parallel output (code reviews)
+  if (type === "parallel" && output.reviews) {
+    return (
+      <div className="space-y-4">
+        {output.summary && (
+          <Card className="p-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="font-medium flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Executive Summary
+                </Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onCopy(output.summary)}
+                  className="h-6 px-2 text-xs"
+                >
+                  {copiedText === output.summary ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </Button>
+              </div>
+              <div className="bg-muted/50 p-3 rounded-md text-sm leading-relaxed">
+                {output.summary}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <div className="space-y-3">
+          <Label className="font-medium flex items-center gap-2">
+            <Code className="h-4 w-4" />
+            Detailed Reviews
+          </Label>
+          {output.reviews?.map((review: any, index: number) => (
+            <Card key={index} className="p-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className={cn(
+                    review.type === "security" ? "border-red-200 text-red-700" :
+                    review.type === "performance" ? "border-yellow-200 text-yellow-700" :
+                    "border-blue-200 text-blue-700"
+                  )}>
+                    {review.type} Review
+                  </Badge>
+                  {(review.riskLevel || review.impact || review.qualityScore) && (
+                    <Badge variant="secondary" className={cn(
+                      review.riskLevel === "high" || review.impact === "high" || review.qualityScore < 7 
+                        ? "bg-red-100 text-red-800" :
+                      review.riskLevel === "medium" || review.impact === "medium" || review.qualityScore < 8
+                        ? "bg-yellow-100 text-yellow-800" :
+                        "bg-green-100 text-green-800"
+                    )}>
+                      {review.riskLevel || review.impact || `Score: ${review.qualityScore}/10`}
+                    </Badge>
+                  )}
+                </div>
+
+                {(review.vulnerabilities?.length > 0 || review.issues?.length > 0 || review.concerns?.length > 0) && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-red-600 uppercase">Issues Found</Label>
+                    <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                      <ul className="text-sm space-y-1">
+                        {(review.vulnerabilities || review.issues || review.concerns || []).map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-red-500 text-xs mt-1">•</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {(review.suggestions?.length > 0 || review.optimizations?.length > 0 || review.recommendations?.length > 0) && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-blue-600 uppercase">Recommendations</Label>
+                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                      <ul className="text-sm space-y-1">
+                        {(review.suggestions || review.optimizations || review.recommendations || []).map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-blue-500 text-xs mt-1">•</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Default rendering for other types or simple outputs
+  const renderValue = (key: string, value: any) => {
+    if (typeof value === "string") {
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium text-muted-foreground uppercase">
+              {key}
+            </Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopy(value)}
+              className="h-6 px-2 text-xs"
+            >
+              {copiedText === value ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
+          <div className="bg-muted/50 p-3 rounded-md text-sm leading-relaxed">
+            {value}
+          </div>
+        </div>
+      );
+    }
+
+    if (typeof value === "object" && value !== null) {
+      return (
+        <div className="space-y-2">
+          <Label className="text-xs font-medium text-muted-foreground uppercase">{key}</Label>
+          <Card className="p-3 bg-muted/30">
+            <div className="space-y-2">
+              {Object.entries(value).map(([subKey, subValue]) => (
+                <div key={subKey} className="flex justify-between items-center text-sm">
+                  <span className="font-medium">{subKey}:</span>
+                  <span
+                    className={cn(
+                      "px-2 py-1 rounded text-xs",
+                      typeof subValue === "boolean"
+                        ? subValue
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                        : "bg-muted text-foreground"
+                    )}
+                  >
+                    {String(subValue)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        <Label className="text-xs font-medium text-muted-foreground uppercase">{key}</Label>
+        <div className="bg-muted/50 p-3 rounded-md text-sm">
+          {String(value)}
+        </div>
+      </div>
+    );
+  };
+
+  if (output.text && Object.keys(output).length === 1) {
+    return (
+      <Card className="p-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium text-muted-foreground uppercase">Result</Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopy(output.text)}
+              className="h-6 px-2 text-xs"
+            >
+              {copiedText === output.text ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-md text-sm leading-relaxed">
+            {output.text}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {Object.entries(output).map(([key, value]) => (
+        <Card key={key} className="p-4">
+          {renderValue(key, value)}
+        </Card>
+      ))}
+    </div>
+  );
+}
