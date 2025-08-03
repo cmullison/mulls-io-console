@@ -32,45 +32,80 @@ function PaymentForm({ packageId, clientSecret, onSuccess, onCancel, credits, pr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[StripePaymentForm] handleSubmit started", { packageId, clientSecret: !!clientSecret });
 
     if (!stripe || !elements) {
+      console.error("[StripePaymentForm] Missing stripe or elements", { stripe: !!stripe, elements: !!elements });
       return;
     }
 
     setIsProcessing(true);
+    console.log("[StripePaymentForm] Starting payment processing");
 
     try {
+      console.log("[StripePaymentForm] Confirming payment with Stripe");
       const { error } = await stripe.confirmPayment({
         elements,
         redirect: "if_required",
       });
 
       if (error) {
+        console.error("[StripePaymentForm] Stripe confirmPayment error", {
+          code: error.code,
+          message: error.message,
+          type: error.type,
+          paymentIntent: error.payment_intent
+        });
         toast.error(error.message || "Payment failed");
       } else {
+        console.log("[StripePaymentForm] Payment confirmed, retrieving payment intent");
         // The payment was successful
         const paymentIntent = await stripe.retrievePaymentIntent(clientSecret);
+        
+        console.log("[StripePaymentForm] Payment intent retrieved", {
+          exists: !!paymentIntent.paymentIntent,
+          id: paymentIntent.paymentIntent?.id,
+          status: paymentIntent.paymentIntent?.status,
+          amount: paymentIntent.paymentIntent?.amount
+        });
+        
         if (paymentIntent.paymentIntent) {
+          console.log("[StripePaymentForm] Calling confirmPayment action", {
+            packageId,
+            paymentIntentId: paymentIntent.paymentIntent.id
+          });
+          
           const { success } = await confirmPayment({
             packageId,
             paymentIntentId: paymentIntent.paymentIntent.id,
           });
 
+          console.log("[StripePaymentForm] confirmPayment action result", { success });
+
           if (success) {
+            console.log("[StripePaymentForm] Payment successful");
             toast.success("Payment successful!");
             onSuccess();
           } else {
+            console.error("[StripePaymentForm] confirmPayment returned false");
             toast.error("Payment failed");
           }
         } else {
+          console.error("[StripePaymentForm] No payment intent found in response");
           throw new Error("No payment intent found");
         }
       }
     } catch (error) {
-      console.error("Payment error:", error);
+      console.error("[StripePaymentForm] Payment error", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        packageId,
+        clientSecret: !!clientSecret
+      });
       toast.error("An unexpected error occurred");
     } finally {
       setIsProcessing(false);
+      console.log("[StripePaymentForm] Payment processing completed");
     }
   };
 
@@ -134,7 +169,30 @@ function PaymentForm({ packageId, clientSecret, onSuccess, onCancel, credits, pr
 
 export function StripePaymentForm(props: StripePaymentFormProps) {
   const { resolvedTheme: theme } = useTheme();
-  const stripePromise = useMemo(() => process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) : null, []);
+  
+  const stripePromise = useMemo(() => {
+    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    console.log("[StripePaymentForm] Initializing Stripe", { 
+      hasPublishableKey: !!publishableKey,
+      clientSecret: !!props.clientSecret,
+      theme
+    });
+    
+    if (!publishableKey) {
+      console.error("[StripePaymentForm] Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY");
+      return null;
+    }
+    
+    return loadStripe(publishableKey);
+  }, []);
+
+  console.log("[StripePaymentForm] Rendering Elements wrapper", {
+    stripePromise: !!stripePromise,
+    clientSecret: !!props.clientSecret,
+    packageId: props.packageId,
+    credits: props.credits,
+    price: props.price
+  });
 
   return (
     <Elements
