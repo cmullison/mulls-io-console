@@ -55,7 +55,7 @@ Have a look at the [project plan](./cursor-docs/project-plan.md) to get an overv
   - 🧹 Cache Purging
   - ✅ Type Checking
 - 🎨 Modern UI
-  - 🎨 Tailwind CSS
+  - 🎨 Tailwind CSS v4
   - 🧩 Shadcn UI Components
   - 🌓 Dark/Light Mode
   - 📱 Responsive Design
@@ -116,7 +116,7 @@ Have a look at the [project plan](./cursor-docs/project-plan.md) to get an overv
 
 - [ ] Add an eslint rule to check for unused imports and exports
 - [ ] Add an eslint rule to check for unused variables and functions
-- [ ] Upgrade to Tailwind 4 and fix the errors and visual regressions. Already started here https://github.com/LubomirGeorgiev/cloudflare-workers-nextjs-saas-template/tree/tailwind-4-upgrade
+- [x] ~~Upgrade to Tailwind 4 and fix the errors and visual regressions~~ ✅ **COMPLETED**
 - [ ] Update Meta SEO tags 🔍
 - [ ] Dynamic OpenGraph images 📸
 - [ ] sitemap.xml 📄
@@ -142,7 +142,7 @@ After making a change to wrangler.jsonc, you need to run `pnpm cf-typegen` to ge
 1. Go to `src/constants.ts` and update it with your project details
 2. Update `.cursor/rules/001-main-project-context.mdc` with your project specification so that Cursor AI can give you better suggestions
 3. Update the footer in `src/components/footer.tsx` with your project details and links
-4. Optional: Update the color palette in `src/app/globals.css`
+4. **Customize colors and theme**: Edit `src/app/index.css` to update the color palette and theme variables
 5. Update the metadata in `src/app/layout.tsx` with your project details
 
 ## Deploying to Cloudflare with Github Actions
