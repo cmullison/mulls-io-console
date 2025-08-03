@@ -184,7 +184,7 @@ export function StripePaymentForm(props: StripePaymentFormProps) {
     }
     
     return loadStripe(publishableKey);
-  }, []);
+  }, [props.clientSecret, theme]);
 
   console.log("[StripePaymentForm] Rendering Elements wrapper", {
     stripePromise: !!stripePromise,

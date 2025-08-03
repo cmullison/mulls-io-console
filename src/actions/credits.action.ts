@@ -95,10 +95,10 @@ export async function createPaymentIntent({ packageId }: CreatePaymentIntentInpu
 
       const paymentIntentData = {
         amount: creditPackage.price * 100,
-        currency: 'usd',
+        currency: 'usd' as const,
         automatic_payment_methods: {
           enabled: true,
-          allow_redirects: 'never',
+          allow_redirects: 'never' as const,
         },
         metadata: {
           userId: session.user.id,
