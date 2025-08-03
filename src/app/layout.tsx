@@ -21,9 +21,17 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   metadataBase: new URL(SITE_URL),
-  keywords: ["Chris Mullison", "Chris Mulls", "Mulls.io", "Mullsio"],
+  keywords: ["Chris Mullison", "Chris Mulls", "Mulls.io", "Mullsio", "monitoring", "console", "dashboard", "configuration"],
   authors: [{ name: "Chris Mullison" }],
   creator: "Chris Mullison",
+  publisher: "Chris Mullison",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  category: "technology",
+  classification: "Business",
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -31,12 +39,21 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     siteName: SITE_NAME,
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     creator: "@cmmulla",
+    images: ["/opengraph-image.png"],
   },
   robots: {
     index: true,
@@ -49,6 +66,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: "google-site-verification-code",
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
 };
 
 export default function BaseLayout({
@@ -56,8 +79,33 @@ export default function BaseLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    author: {
+      '@type': 'Person',
+      name: 'Chris Mullison',
+      url: 'https://mulls.io',
+    },
+    publisher: {
+      '@type': 'Person',
+      name: 'Chris Mullison',
+    },
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={inter.className}>
         <NextTopLoader
           initialPosition={0.15}
