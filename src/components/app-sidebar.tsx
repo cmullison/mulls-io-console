@@ -11,6 +11,7 @@ import {
   Settings2,
   SquareTerminal,
   Users,
+  Bot,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -95,7 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {
         title: "Agents",
         url: "/dashboard/agents" as Route,
-        icon: Users,
+        icon: Bot,
       },
       {
         title: "Settings",

@@ -93,7 +93,15 @@ export const Sequential = createAgent(
     
     const { text: copy } = await generateText({
       model,
-      prompt: `Write persuasive marketing copy for: ${props.input}. Focus on benefits and emotional appeal.`,
+      prompt: `Write persuasive marketing copy for: ${props.input}. 
+
+Format your response in markdown with:
+- **Bold** for key benefits and important points
+- *Italics* for emotional phrases
+- Bullet points for features
+- Clear structure with headers if needed
+
+Focus on benefits and emotional appeal.`,
     });
     ctx.toast("Copy generated");
 
