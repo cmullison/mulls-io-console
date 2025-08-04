@@ -13,7 +13,11 @@ type WorkflowType =
   | "routing"
   | "parallel"
   | "orchestrator"
-  | "evaluator";
+  | "evaluator"
+  | "sequentialBuilder"
+  | "parallelSections"
+  | "orchestratorCreator"
+  | "evaluatorOptimizer";
 
 interface OutputDisplayProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -375,32 +379,118 @@ export function OutputDisplay({
       );
     }
 
+    if (Array.isArray(value)) {
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium text-muted-foreground uppercase">
+              {key} ({value.length} items)
+            </Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopy(JSON.stringify(value, null, 2))}
+              className="h-6 px-2 text-xs"
+            >
+              {copiedText === JSON.stringify(value, null, 2) ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {value.map((item, index) => (
+              <Card key={index} className="p-3 bg-muted/30">
+                {typeof item === "object" && item !== null ? (
+                  <div className="space-y-2">
+                    {Object.entries(item).map(([itemKey, itemValue]) => (
+                      <div key={itemKey} className="text-sm">
+                        <span className="font-medium text-muted-foreground">{itemKey}:</span>
+                        <div className="mt-1 text-foreground">
+                          {typeof itemValue === "string" ? (
+                            <MarkdownText content={itemValue} />
+                          ) : (
+                            <span className="px-2 py-1 bg-muted rounded text-xs">
+                              {String(itemValue)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm">
+                    <MarkdownText content={String(item)} />
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     if (typeof value === "object" && value !== null) {
       return (
         <div className="space-y-2">
-          <Label className="text-xs font-medium text-muted-foreground uppercase">
-            {key}
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium text-muted-foreground uppercase">
+              {key}
+            </Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopy(JSON.stringify(value, null, 2))}
+              className="h-6 px-2 text-xs"
+            >
+              {copiedText === JSON.stringify(value, null, 2) ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
           <Card className="p-3 bg-muted/30">
             <div className="space-y-2">
               {Object.entries(value).map(([subKey, subValue]) => (
-                <div
-                  key={subKey}
-                  className="flex justify-between items-center text-sm"
-                >
-                  <span className="font-medium">{subKey}:</span>
-                  <span
-                    className={cn(
-                      "px-2 py-1 rounded text-xs",
-                      typeof subValue === "boolean"
-                        ? subValue
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                        : "bg-muted text-foreground"
+                <div key={subKey} className="text-sm">
+                  <span className="font-medium text-muted-foreground">{subKey}:</span>
+                  <div className="mt-1">
+                    {typeof subValue === "string" ? (
+                      <MarkdownText content={subValue} />
+                    ) : Array.isArray(subValue) ? (
+                      <div className="space-y-1">
+                        {subValue.map((item, idx) => (
+                          <div key={idx} className="bg-muted/50 p-2 rounded text-xs">
+                            {typeof item === "object" ? (
+                              <div className="space-y-1">
+                                {Object.entries(item).map(([k, v]) => (
+                                  <div key={k}>
+                                    <span className="font-medium">{k}:</span> {String(v)}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <MarkdownText content={String(item)} />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : typeof subValue === "object" && subValue !== null ? (
+                      <div className="bg-muted/50 p-2 rounded text-xs space-y-1">
+                        {Object.entries(subValue).map(([k, v]) => (
+                          <div key={k}>
+                            <span className="font-medium">{k}:</span> {String(v)}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="px-2 py-1 bg-muted rounded text-xs">
+                        {String(subValue)}
+                      </span>
                     )}
-                  >
-                    {String(subValue)}
-                  </span>
+                  </div>
                 </div>
               ))}
             </div>

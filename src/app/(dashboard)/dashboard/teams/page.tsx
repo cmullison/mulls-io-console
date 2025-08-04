@@ -71,7 +71,7 @@ export default async function TeamsIndexPage() {
         bannerTitle="Teams"
         bannerDescription="Collaborate with others on projects and share resources."
       />
-      <div className="container pt-4 mx-auto px-5 pb-12">
+      <div className="container pt-6 mx-auto px-5 pb-12">
         <div className="mb-8 flex items-center justify-end">
           <Button asChild>
             <Link href={"/dashboard/teams/create" as Route}>

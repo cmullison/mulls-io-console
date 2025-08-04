@@ -35,7 +35,7 @@ export default async function CreateTeamPage() {
         bannerTitle="Create Team"
         bannerDescription="Create a new team to collaborate with others on projects and share resources."
       />
-      <div className="container mx-auto px-5 pb-12">
+      <div className="container mx-auto px-5 pt-6 pb-12">
         <div className="max-w-xl mx-auto">
           <div className="border rounded-lg p-6 bg-card">
             <CreateTeamForm />

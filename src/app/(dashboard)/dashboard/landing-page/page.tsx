@@ -672,7 +672,6 @@ function PatternSection({
                 output={parseOutput(workflowStatus.output)}
                 onCopy={copyToClipboard}
                 copiedText={copiedText}
-                // @ts-expect-error - type is not defined in the OutputDisplay component
                 type={type}
               />
             </div>
