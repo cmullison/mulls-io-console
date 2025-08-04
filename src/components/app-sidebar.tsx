@@ -12,6 +12,7 @@ import {
   SquareTerminal,
   Users,
   Bot,
+  Globe,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -97,6 +98,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Agents",
         url: "/dashboard/agents" as Route,
         icon: Bot,
+      },
+      {
+        title: "Landing Page",
+        url: "/dashboard/landing-page" as Route,
+        icon: Globe,
       },
       {
         title: "Settings",

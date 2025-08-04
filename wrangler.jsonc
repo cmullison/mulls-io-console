@@ -86,6 +86,22 @@
       {
         "class_name": "Evaluator",
         "name": "evaluator"
+      },
+      {
+        "class_name": "SequentialBuilder",
+        "name": "sequentialBuilder"
+      },
+      {
+        "class_name": "ParallelSections",
+        "name": "parallelSections"
+      },
+      {
+        "class_name": "OrchestratorCreator",
+        "name": "orchestratorCreator"
+      },
+      {
+        "class_name": "EvaluatorOptimizer",
+        "name": "evaluatorOptimizer"
       }
       ]
     },
@@ -103,6 +119,15 @@
         "Parallel",
         "Orchestrator",
         "Evaluator"
+      ]
+      },
+      {
+        "tag": "v3",
+        "new_sqlite_classes": [
+        "SequentialBuilder",
+        "ParallelSections",
+        "OrchestratorCreator",
+        "EvaluatorOptimizer"
       ]
       },
     ],

@@ -7,19 +7,22 @@ The entry point to this worker is at .open-next/worker.js
 **✅ COMPLETED: Cloudflare Agents Integration**
 
 ### Architecture Overview
+
 This project implements AI agents using Cloudflare's Agents SDK with Durable Objects for persistent, real-time WebSocket communication. The implementation supports both development (Next.js API routes) and production (Cloudflare Workers with Durable Objects).
 
 ### Key Components
 
 #### 1. **Worker Entry Point**
+
 - **File**: `agents-worker.js` (referenced in `wrangler.jsonc`)
 - **Purpose**: Custom worker that combines OpenNext (Next.js) with Cloudflare Agents routing
-- **Functionality**: 
+- **Functionality**:
   - Routes WebSocket requests to `/agents/*` paths to Durable Objects
   - Falls back to OpenNext worker for all other requests
   - Exports all agent Durable Object classes
 
-#### 2. **Agent Durable Objects** 
+#### 2. **Agent Durable Objects**
+
 - **Location**: Defined inline in `agents-worker.js`
 - **Classes**: Sequential, Routing, Parallel, Orchestrator, Evaluator
 - **Features**:
@@ -29,21 +32,25 @@ This project implements AI agents using Cloudflare's Agents SDK with Durable Obj
   - Toast notifications and status updates
 
 #### 3. **Frontend Integration**
+
 - **File**: `src/app/(dashboard)/dashboard/agents/page.tsx`
 - **Hook**: Uses `useAgent` from `agents/react` package
 - **UI**: Modern Shadcn components with real-time status updates
 - **Communication**: WebSocket connections to Durable Objects
 
-#### 4. **Environment Variables** 
+#### 4. **Environment Variables**
+
 Required for production deployment:
+
 ```
 OPENAI_API_KEY=your_openai_key
-AI_GATEWAY_ACCOUNT_ID=your_cloudflare_account_id  
+AI_GATEWAY_ACCOUNT_ID=your_cloudflare_account_id
 AI_GATEWAY_ID=your_gateway_id
 AI_GATEWAY_TOKEN=your_gateway_token
 ```
 
 #### 5. **Durable Object Configuration**
+
 - **File**: `wrangler.jsonc`
 - **Bindings**: Sequential, Routing, Parallel, Orchestrator, Evaluator
 - **Migration**: v2 tag for agent classes deployment
@@ -51,18 +58,20 @@ AI_GATEWAY_TOKEN=your_gateway_token
 ### Agent Patterns Implemented
 
 1. **Sequential (Prompt Chaining)**: Decomposes tasks into sequential steps with quality checks
-2. **Routing**: Classifies input and routes to specialized handlers  
+2. **Routing**: Classifies input and routes to specialized handlers
 3. **Parallel**: Runs multiple reviews (security, performance, maintainability) concurrently
 4. **Orchestrator**: Dynamically breaks down complex tasks into worker LLMs
 5. **Evaluator**: Iterative translation with quality evaluation and improvement loops
 
 ### Deployment Architecture
 
-**Development**: 
+**Development**:
+
 - Next.js dev server with API routes at `/api/agents/*`
 - HTTP-based communication for local testing
 
 **Production**:
+
 - Cloudflare Workers with Durable Objects
 - WebSocket-based real-time communication
 - Global edge deployment with persistent state
@@ -70,7 +79,7 @@ AI_GATEWAY_TOKEN=your_gateway_token
 ### Technical Benefits
 
 - **Real-time Updates**: WebSocket streaming of agent progress
-- **Persistent State**: Agents survive browser refreshes  
+- **Persistent State**: Agents survive browser refreshes
 - **Global Scale**: Edge deployment with low latency
 - **Cost Effective**: Pay-per-use compute model
 - **Memory Isolation**: Each agent runs independently
@@ -81,4 +90,7 @@ To do:
 
 - ✅ Upgrade to tailwind 4 (COMPLETED)
 - ✅ AI Agents with Cloudflare Durable Objects (COMPLETED)
-- Update the color palette in `src/app/globals.css`
+- Create a new dashboard page with modified versions of the agents and patterns in src/app/(dashboard)/dashboard/agents that are focused on creating landing page copy, design, prompts for images (for text-to-image gen), for all major sections of a landing page. start by outlining a plan for us to iterate and solidify before implementing.
+- Create a new dashboard page for text-to-image generation. this will be the only entry point to text-to-image generation, so it will need to be dynamic in that the model can be configured, and thus configurations for the user to choose from will also need to be dynamic. however, given that this is mainly intended to be for non-technical users, we may opt for doing the heavy lifting there on the users' behalf. let's discuss.
+- I also want a general prompt repository, so we'll have to incorporate d1 database somehow into that. I have a UI in mind for the prompt repo already, so remind me to grab that for you when we get to this step
+- I need to add analytics (I have this in another project but we'll need to add it to this), a chat UI (I also have this), an R2 file explorer (I also have this), and some workers queues to this project. we'll split this list item into a separate to-do given the complexity, and given that some will need to be refactored for our next backend

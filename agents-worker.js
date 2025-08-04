@@ -315,6 +315,319 @@ export const Evaluator = createAgent(
   }
 );
 
+// Landing Page Agents
+export const SequentialBuilder = createAgent(
+  "SequentialBuilder",
+  async (props, ctx) => {
+    const model = ctx.openai("gpt-4o");
+    const { productName, targetAudience, primaryGoal, industry } = props;
+    
+    ctx.toast("Creating hero section...");
+    const { object: heroData } = await generateObject({
+      model,
+      prompt: `Create a high-converting hero section for "${productName}" targeting ${targetAudience}. 
+      Primary goal: ${primaryGoal}. Industry: ${industry}.`,
+      schema: z.object({
+        headline: z.string(),
+        subheadline: z.string(),
+        valueProps: z.array(z.string()),
+        ctaText: z.string(),
+        imagePrompt: z.string(),
+      }),
+    });
+
+    ctx.toast("Building features section...");
+    const { object: featuresData } = await generateObject({
+      model,
+      prompt: `Based on hero: ${JSON.stringify(heroData)}, create features section for "${productName}".`,
+      schema: z.object({
+        sectionHeadline: z.string(),
+        features: z.array(z.object({
+          title: z.string(),
+          description: z.string(),
+          icon: z.string(),
+        })),
+        imagePrompt: z.string(),
+      }),
+    });
+
+    ctx.toast("Creating social proof...");
+    const { object: socialProofData } = await generateObject({
+      model,
+      prompt: `Create social proof section for "${productName}" targeting ${targetAudience}.`,
+      schema: z.object({
+        sectionHeadline: z.string(),
+        testimonials: z.array(z.object({
+          quote: z.string(),
+          name: z.string(),
+          title: z.string(),
+          company: z.string(),
+        })),
+        stats: z.array(z.object({
+          number: z.string(),
+          label: z.string(),
+        })),
+        logosPrompt: z.string(),
+      }),
+    });
+
+    ctx.toast("Finalizing CTA section...");
+    const { object: ctaData } = await generateObject({
+      model,
+      prompt: `Create final CTA section for "${productName}" with goal: ${primaryGoal}.`,
+      schema: z.object({
+        headline: z.string(),
+        benefits: z.array(z.string()),
+        primaryCta: z.string(),
+        secondaryCta: z.string(),
+        trustSignals: z.array(z.string()),
+      }),
+    });
+
+    ctx.toast("Landing page sections complete!");
+    return {
+      hero: heroData,
+      features: featuresData,
+      socialProof: socialProofData,
+      cta: ctaData,
+      metadata: { productName, targetAudience, primaryGoal, industry }
+    };
+  }
+);
+
+export const ParallelSections = createAgent(
+  "ParallelSections",
+  async (props, ctx) => {
+    const model = ctx.openai("gpt-4o");
+    const { brandName, productDetails, targetMarket, tone, designStyle } = props;
+    
+    ctx.toast("Generating sections in parallel...");
+    
+    const [heroData, aboutData, benefitsData, faqData] = await Promise.all([
+      generateObject({
+        model,
+        prompt: `Create hero section for "${brandName}". Details: ${productDetails}. Target: ${targetMarket}. Tone: ${tone}.`,
+        schema: z.object({
+          headline: z.string(),
+          subheadline: z.string(),
+          valueProps: z.array(z.string()),
+          ctaText: z.string(),
+          imagePrompt: z.string(),
+        }),
+      }),
+      generateObject({
+        model,
+        prompt: `Create about section for "${brandName}". Details: ${productDetails}. Tone: ${tone}.`,
+        schema: z.object({
+          sectionHeadline: z.string(),
+          story: z.string(),
+          mission: z.string(),
+          teamImagePrompt: z.string(),
+        }),
+      }),
+      generateObject({
+        model,
+        prompt: `Create benefits section for "${brandName}". Details: ${productDetails}. Target: ${targetMarket}.`,
+        schema: z.object({
+          sectionHeadline: z.string(),
+          benefits: z.array(z.object({
+            title: z.string(),
+            description: z.string(),
+            icon: z.string(),
+          })),
+          imagePrompt: z.string(),
+        }),
+      }),
+      generateObject({
+        model,
+        prompt: `Create FAQ section for "${brandName}" addressing common objections. Target: ${targetMarket}.`,
+        schema: z.object({
+          sectionHeadline: z.string(),
+          faqs: z.array(z.object({
+            question: z.string(),
+            answer: z.string(),
+          })),
+        }),
+      }),
+    ]);
+
+    ctx.toast("Ensuring brand consistency...");
+    const { object: consistencyData } = await generateObject({
+      model,
+      prompt: `Review sections for brand consistency. Brand: ${brandName}, Tone: ${tone}, Target: ${targetMarket}`,
+      schema: z.object({
+        consistencyScore: z.number().min(1).max(10),
+        suggestions: z.array(z.string()),
+      }),
+    });
+
+    ctx.toast("Parallel generation complete!");
+    return {
+      hero: heroData.object,
+      about: aboutData.object,
+      benefits: benefitsData.object,
+      faq: faqData.object,
+      consistency: consistencyData,
+      metadata: { brandName, targetMarket, tone, designStyle }
+    };
+  }
+);
+
+export const OrchestratorCreator = createAgent(
+  "OrchestratorCreator",
+  async (props, ctx) => {
+    const model = ctx.openai("gpt-4o");
+    const { productName, productDescription, targetAudience, businessGoals } = props;
+    
+    ctx.toast("Creating strategy...");
+    const { object: strategy } = await generateObject({
+      model,
+      prompt: `Create landing page strategy for "${productName}": ${productDescription}. Target: ${targetAudience}. Goals: ${businessGoals}.`,
+      schema: z.object({
+        pageStructure: z.array(z.string()),
+        messagingHierarchy: z.object({
+          primary: z.string(),
+          secondary: z.string(),
+        }),
+        conversionStrategy: z.array(z.string()),
+      }),
+    });
+
+    ctx.toast("Delegating content creation...");
+    const [heroSection, featuresSection, ctaSection] = await Promise.all([
+      generateObject({
+        model,
+        prompt: `Create hero section based on strategy: ${JSON.stringify(strategy)}. Product: ${productName}`,
+        schema: z.object({
+          headline: z.string(),
+          subheadline: z.string(),
+          valueProps: z.array(z.string()),
+          primaryCTA: z.string(),
+          heroImagePrompt: z.string(),
+        }),
+      }),
+      generateObject({
+        model,
+        prompt: `Create features section for ${productName}: ${productDescription}`,
+        schema: z.object({
+          sectionHeadline: z.string(),
+          features: z.array(z.object({
+            title: z.string(),
+            description: z.string(),
+            benefit: z.string(),
+            icon: z.string(),
+          })),
+          imagePrompt: z.string(),
+        }),
+      }),
+      generateObject({
+        model,
+        prompt: `Create CTA section based on goals: ${businessGoals}`,
+        schema: z.object({
+          headline: z.string(),
+          benefits: z.array(z.string()),
+          primaryCTA: z.string(),
+          trustSignals: z.array(z.string()),
+        }),
+      }),
+    ]);
+
+    ctx.toast("Creating design guidelines...");
+    const { object: designGuidelines } = await generateObject({
+      model,
+      prompt: `Create design guidelines for landing page. Product: ${productName}, Target: ${targetAudience}`,
+      schema: z.object({
+        colorPalette: z.object({
+          primary: z.string(),
+          secondary: z.string(),
+          accent: z.string(),
+        }),
+        typography: z.object({
+          headingFont: z.string(),
+          bodyFont: z.string(),
+        }),
+        imagery: z.array(z.string()),
+      }),
+    });
+
+    ctx.toast("Complete page created!");
+    return {
+      strategy,
+      sections: {
+        hero: heroSection.object,
+        features: featuresSection.object,
+        cta: ctaSection.object,
+      },
+      designGuidelines,
+      metadata: { productName, targetAudience, businessGoals }
+    };
+  }
+);
+
+export const EvaluatorOptimizer = createAgent(
+  "EvaluatorOptimizer",
+  async (props, ctx) => {
+    const model = ctx.openai("gpt-4o");
+    const { existingCopy, sectionType, optimizationGoals, targetAudience } = props;
+    
+    let currentCopy = JSON.parse(existingCopy);
+    let bestScore = 0;
+    let bestVersion = currentCopy;
+    
+    for (let iteration = 1; iteration <= 3; iteration++) {
+      ctx.toast(`Iteration ${iteration}: Optimizing copy...`);
+      
+      const { text: improvedCopy } = await generateText({
+        model,
+        prompt: `Optimize this ${sectionType} copy for: ${optimizationGoals}. 
+        Current: ${JSON.stringify(currentCopy)}. Target: ${targetAudience}`,
+        system: "You are a conversion copywriting expert.",
+      });
+
+      ctx.toast(`Iteration ${iteration}: Evaluating...`);
+      const { object: evaluation } = await generateObject({
+        model,
+        prompt: `Rate this copy improvement on conversion potential (1-100): ${improvedCopy}`,
+        schema: z.object({
+          overallScore: z.number().min(1).max(100),
+          improvements: z.array(z.string()),
+          strengths: z.array(z.string()),
+          weaknesses: z.array(z.string()),
+        }),
+      });
+
+      if (evaluation.overallScore > bestScore) {
+        bestScore = evaluation.overallScore;
+        bestVersion = improvedCopy;
+      }
+
+      if (evaluation.overallScore >= 85) break;
+      currentCopy = JSON.parse(improvedCopy);
+    }
+
+    ctx.toast("Creating A/B test variations...");
+    const { object: abTestVariations } = await generateObject({
+      model,
+      prompt: `Create 3 A/B test variations of: ${bestVersion}`,
+      schema: z.object({
+        variationA: z.string(),
+        variationB: z.string(), 
+        variationC: z.string(),
+        testHypotheses: z.array(z.string()),
+      }),
+    });
+
+    ctx.toast(`Optimization complete! Final score: ${bestScore}/100`);
+    return {
+      originalCopy: JSON.parse(existingCopy),
+      optimizedCopy: bestVersion,
+      finalScore: bestScore,
+      abTesting: abTestVariations,
+      metadata: { sectionType, optimizationGoals, targetAudience }
+    };
+  }
+);
+
 // Export the default handler that routes between agents and OpenNext
 export default {
   async fetch(request, env, ctx) {
