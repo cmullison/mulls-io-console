@@ -1,13 +1,16 @@
-import { PageHeader } from "@/components/page-header"
-import { Alert } from "@heroui/react"
-import { COMPONENTS } from "./components-catalog"
-import { MarketplaceCard } from "@/components/marketplace-card"
-import { getSessionFromCookie } from "@/utils/auth"
-import { getUserPurchasedItems } from "@/utils/credits"
+import { PageHeader } from "@/components/page-header";
+import { Alert } from "@heroui/react";
+import { COMPONENTS } from "./components-catalog";
+import { MarketplaceCard } from "@/components/marketplace-card";
+import { getSessionFromCookie } from "@/utils/auth";
+import { getUserPurchasedItems } from "@/utils/credits";
+import PageBanner from "@/components/page-banner";
 
 export default async function MarketplacePage() {
   const session = await getSessionFromCookie();
-  const purchasedItems = session ? await getUserPurchasedItems(session.userId) : new Set();
+  const purchasedItems = session
+    ? await getUserPurchasedItems(session.userId)
+    : new Set();
 
   return (
     <>
@@ -15,18 +18,15 @@ export default async function MarketplacePage() {
         items={[
           {
             href: "/dashboard/marketplace",
-            label: "Marketplace"
-          }
+            label: "Marketplace",
+          },
         ]}
       />
+      <PageBanner
+        bannerTitle="Marketplace"
+        bannerDescription="Purchase and use our premium components using your credits"
+      />
       <div className="container mx-auto px-5 pb-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mt-4">Component Marketplace</h1>
-          <p className="text-muted-foreground mt-2">
-            Purchase and use our premium components using your credits
-          </p>
-        </div>
-
         <Alert
           color="warning"
           title="Demo Template Feature"
@@ -49,5 +49,5 @@ export default async function MarketplacePage() {
         </div>
       </div>
     </>
-  )
+  );
 }

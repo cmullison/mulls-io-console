@@ -15,9 +15,9 @@ export default function PageBanner({
 }) {
   return (
     <Card className="overflow-hidden rounded-none border-t-0 border-l-0 border-r-0 border-b-1 m-0 p-0 !shadow-none">
-      <CardHeader className="h-20 bg-gradient-to-br from-blue-100 via-pink-100 to-orange-100 p-2 dark:from-blue-900 dark:via-pink-900 dark:to-orange-900">
+      <CardHeader className="min-h-16 py-2 bg-gradient-to-br from-blue-100 via-pink-100 to-orange-100 dark:from-blue-900 dark:via-pink-900 dark:to-orange-900">
         <div
-          className="p-2 w-full h-full"
+          className="p-2 w-full"
           style={{
             backgroundImage:
               "linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)",
