@@ -21,7 +21,13 @@ import { R2FilePreview } from "./r2-file-preview";
 import { toast } from "sonner";
 import { r2Config } from "@/lib/r2-config";
 import { getAvailableBuckets } from "@/lib/r2-bindings";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface R2Object {
   key: string;
@@ -50,7 +56,9 @@ export function R2FileBrowser({
   initialBucket,
 }: R2FileBrowserProps) {
   const [currentPath, setCurrentPath] = useState(initialPath);
-  const [currentBucket, setCurrentBucket] = useState(initialBucket || r2Config.defaultBucketName);
+  const [currentBucket, setCurrentBucket] = useState(
+    initialBucket || r2Config.defaultBucketName
+  );
   const [objects, setObjects] = useState<R2Object[]>(
     initialData
       ? [...(initialData.folders || []), ...(initialData.files || [])]
@@ -78,7 +86,9 @@ export function R2FileBrowser({
       }
       params.set("delimiter", "/");
 
-      const response = await fetch(`/api/r2/buckets/${currentBucket}?${params}`);
+      const response = await fetch(
+        `/api/r2/buckets/${currentBucket}?${params}`
+      );
       if (!response.ok) {
         throw new Error("Failed to load files");
       }
@@ -99,7 +109,7 @@ export function R2FileBrowser({
 
   const changeBucket = (bucket: string) => {
     setCurrentBucket(bucket);
-    setCurrentPath(''); // Reset to root when changing buckets
+    setCurrentPath(""); // Reset to root when changing buckets
   };
 
   const navigateUp = () => {
@@ -169,7 +179,7 @@ export function R2FileBrowser({
   return (
     <div className="space-y-4">
       {/* Bucket Selector & Breadcrumb Navigation */}
-      <Card className="p-4">
+      <Card className="p-4 !border-none !bg-transparent !shadow-none">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Select value={currentBucket} onValueChange={changeBucket}>
@@ -184,9 +194,9 @@ export function R2FileBrowser({
                 ))}
               </SelectContent>
             </Select>
-            
+
             <span>/</span>
-            
+
             <Button
               variant="ghost"
               size="sm"
