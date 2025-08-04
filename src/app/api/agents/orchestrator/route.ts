@@ -34,7 +34,7 @@ async function orchestratorWorkflow(
   // This agent uses an orchestrator-workers workflow, suitable for complex tasks where subtasks aren't pre-defined.
   // It dynamically breaks down tasks and delegates them to worker LLMs, synthesizing their results.
   const { object: implementationPlan } = await generateObject({
-    model: ctx.openai("o1"),
+    model: ctx.openai("o3"),
     prompt: `Analyze this feature request and create an implementation plan:
     ${props.featureRequest}`,
     schema: z.object({
@@ -51,7 +51,7 @@ async function orchestratorWorkflow(
       "You are a senior software architect planning feature implementations.",
   });
   ctx.toast("Implementation plan created");
-  
+
   // Workers: Execute the planned changes
   const fileChanges = await Promise.all(
     implementationPlan.files.map(async (file) => {

@@ -14,6 +14,7 @@ import {
   Bot,
   Globe,
   ChartBar,
+  HardDrive,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -109,6 +110,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Analytics",
         url: "/dashboard/analytics" as Route,
         icon: ChartBar,
+      },
+      {
+        title: "R2 Storage",
+        url: "/dashboard/r2" as Route,
+        icon: HardDrive,
       },
       {
         title: "Settings",

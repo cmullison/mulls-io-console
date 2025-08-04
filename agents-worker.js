@@ -1,8 +1,10 @@
+/* eslint-disable import/no-anonymous-default-export */
 // Import the agents package and re-create the agent classes
 import { Agent, routeAgentRequest } from "agents";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject, generateText } from "ai";
 import { z } from "zod";
+import { createAnthropic } from "@ai-sdk/anthropic";
 
 // Import the OpenNext worker
 import openNextWorker from "./.open-next/worker.js";
@@ -72,9 +74,14 @@ function createAgent(name, workflow) {
           },
         });
 
+        const anthropic = createAnthropic({
+          apiKey: this.env.ANTHROPIC_API_KEY,
+        });
+
         const result = await workflow(data.input, {
           openai,
           toast: this.toast,
+          anthropic,
         });
         this.setStatus({ isRunning: false, output: JSON.stringify(result) });
       } catch (error) {
@@ -89,11 +96,11 @@ function createAgent(name, workflow) {
 export const Sequential = createAgent(
   "Sequential",
   async (props, ctx) => {
-    const model = ctx.openai("gpt-4o");
-    
+    const model = ctx.openai("gpt-4.1");
+
     const { text: copy } = await generateText({
       model,
-      prompt: `Write persuasive marketing copy for: ${props.input}. 
+      prompt: `Write persuasive marketing copy for: ${props.input}.
 
 Format your response in markdown with:
 - **Bold** for key benefits and important points
@@ -140,7 +147,7 @@ Focus on benefits and emotional appeal.`,
 );
 
 export const Routing = createAgent(
-  "Routing", 
+  "Routing",
   async (props, ctx) => {
     const model = ctx.openai("gpt-4o");
 
@@ -156,7 +163,7 @@ export const Routing = createAgent(
     ctx.toast("Query classified");
 
     const { text: response } = await generateText({
-      model: classification.complexity === "simple" ? ctx.openai("gpt-4o-mini") : ctx.openai("o1-mini"),
+      model: classification.complexity === "simple" ? ctx.openai("gpt-4o-mini") : ctx.anthropic("claude-opus-4-20250514"),
       prompt: props.query,
       system: {
         general: "You are an expert customer service agent handling general inquiries.",
@@ -165,7 +172,7 @@ export const Routing = createAgent(
       }[classification.type],
     });
     ctx.toast("Response generated");
-    
+
     return { classification, response };
   }
 );
@@ -173,7 +180,7 @@ export const Routing = createAgent(
 export const Parallel = createAgent(
   "Parallel",
   async (props, ctx) => {
-    const model = ctx.openai("gpt-4o");
+    const model = ctx.anthropic("claude-sonnet-4-20250514");
 
     const [securityReview, performanceReview, maintainabilityReview] = await Promise.all([
       generateObject({
@@ -319,13 +326,13 @@ export const Evaluator = createAgent(
 export const SequentialBuilder = createAgent(
   "SequentialBuilder",
   async (props, ctx) => {
-    const model = ctx.openai("gpt-4o");
+    const model = ctx.anthropic("claude-sonnet-4-20250514");
     const { productName, targetAudience, primaryGoal, industry } = props;
-    
+
     ctx.toast("Creating hero section...");
     const { object: heroData } = await generateObject({
       model,
-      prompt: `Create a high-converting hero section for "${productName}" targeting ${targetAudience}. 
+      prompt: `Create a high-converting hero section for "${productName}" targeting ${targetAudience}.
       Primary goal: ${primaryGoal}. Industry: ${industry}.`,
       schema: z.object({
         headline: z.string(),
@@ -398,11 +405,11 @@ export const SequentialBuilder = createAgent(
 export const ParallelSections = createAgent(
   "ParallelSections",
   async (props, ctx) => {
-    const model = ctx.openai("gpt-4o");
+    const model = ctx.anthropic("claude-sonnet-4-20250514");
     const { brandName, productDetails, targetMarket, tone, designStyle } = props;
-    
+
     ctx.toast("Generating sections in parallel...");
-    
+
     const [heroData, aboutData, benefitsData, faqData] = await Promise.all([
       generateObject({
         model,
@@ -476,9 +483,9 @@ export const ParallelSections = createAgent(
 export const OrchestratorCreator = createAgent(
   "OrchestratorCreator",
   async (props, ctx) => {
-    const model = ctx.openai("gpt-4o");
+    const model = ctx.anthropic("claude-sonnet-4-20250514");
     const { productName, productDescription, targetAudience, businessGoals } = props;
-    
+
     ctx.toast("Creating strategy...");
     const { object: strategy } = await generateObject({
       model,
@@ -567,27 +574,44 @@ export const OrchestratorCreator = createAgent(
 export const EvaluatorOptimizer = createAgent(
   "EvaluatorOptimizer",
   async (props, ctx) => {
-    const model = ctx.openai("gpt-4o");
+    const model = ctx.anthropic("claude-sonnet-4-20250514");
     const { existingCopy, sectionType, optimizationGoals, targetAudience } = props;
-    
-    let currentCopy = JSON.parse(existingCopy);
+
+    let currentCopy;
+    try {
+      currentCopy = JSON.parse(existingCopy);
+    } catch {
+      ctx.toast("Invalid JSON format in existing copy", "error");
+      throw new Error("Existing copy must be valid JSON format");
+    }
+
     let bestScore = 0;
     let bestVersion = currentCopy;
-    
+
     for (let iteration = 1; iteration <= 3; iteration++) {
       ctx.toast(`Iteration ${iteration}: Optimizing copy...`);
-      
+
       const { text: improvedCopy } = await generateText({
         model,
-        prompt: `Optimize this ${sectionType} copy for: ${optimizationGoals}. 
-        Current: ${JSON.stringify(currentCopy)}. Target: ${targetAudience}`,
-        system: "You are a conversion copywriting expert.",
+        prompt: `Optimize this ${sectionType} copy for: ${optimizationGoals}.
+        Current: ${JSON.stringify(currentCopy)}. Target: ${targetAudience}
+
+        IMPORTANT: Return ONLY valid JSON with the same structure as the input. Do not include any explanations, markdown formatting, code blocks, or additional text outside the JSON object. The response must be parseable by JSON.parse().`,
+        system: "You are a conversion copywriting expert. Always respond with valid JSON only, no additional text or formatting.",
       });
+
+      let parsedImprovedCopy;
+      try {
+        parsedImprovedCopy = JSON.parse(improvedCopy);
+      } catch {
+        ctx.toast(`Iteration ${iteration}: Invalid JSON response, skipping...`);
+        continue; // Skip this iteration if JSON is invalid
+      }
 
       ctx.toast(`Iteration ${iteration}: Evaluating...`);
       const { object: evaluation } = await generateObject({
         model,
-        prompt: `Rate this copy improvement on conversion potential (1-100): ${improvedCopy}`,
+        prompt: `Rate this copy improvement on conversion potential (1-100): ${JSON.stringify(parsedImprovedCopy)}`,
         schema: z.object({
           overallScore: z.number().min(1).max(100),
           improvements: z.array(z.string()),
@@ -598,11 +622,11 @@ export const EvaluatorOptimizer = createAgent(
 
       if (evaluation.overallScore > bestScore) {
         bestScore = evaluation.overallScore;
-        bestVersion = improvedCopy;
+        bestVersion = parsedImprovedCopy;
       }
 
       if (evaluation.overallScore >= 85) break;
-      currentCopy = JSON.parse(improvedCopy);
+      currentCopy = parsedImprovedCopy;
     }
 
     ctx.toast("Creating A/B test variations...");
@@ -611,15 +635,25 @@ export const EvaluatorOptimizer = createAgent(
       prompt: `Create 3 A/B test variations of: ${bestVersion}`,
       schema: z.object({
         variationA: z.string(),
-        variationB: z.string(), 
+        variationB: z.string(),
         variationC: z.string(),
         testHypotheses: z.array(z.string()),
       }),
     });
 
     ctx.toast(`Optimization complete! Final score: ${bestScore}/100`);
+
+    // Store the original copy before we started modifying it
+    let originalCopyParsed;
+    try {
+      originalCopyParsed = JSON.parse(existingCopy);
+    } catch {
+      // This should not happen since we already validated at the start, but just in case
+      throw new Error("Invalid JSON format in existing copy");
+    }
+
     return {
-      originalCopy: JSON.parse(existingCopy),
+      originalCopy: originalCopyParsed,
       optimizedCopy: bestVersion,
       finalScore: bestScore,
       abTesting: abTestVariations,
@@ -636,7 +670,7 @@ export default {
     if (agentResponse) {
       return agentResponse;
     }
-    
+
     // Otherwise, fall back to OpenNext worker
     return openNextWorker.fetch(request, env, ctx);
   }

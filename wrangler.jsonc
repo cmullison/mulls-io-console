@@ -21,6 +21,12 @@
     "observability": {
       "enabled": true
     },
+  "analytics_engine_datasets": [
+    {
+      "binding": "mulls_io_analytics",
+      "dataset": "mulls_io_analytics"
+    }
+  ],
 
   "routes": [{ "pattern": "console.mulls.io", "custom_domain": true }],
     /**
@@ -43,7 +49,8 @@
     "vars": {
         "EMAIL_FROM": "no-reply@updates.mulls.io",
         "EMAIL_FROM_NAME": "Mulls.io",
-        "EMAIL_REPLY_TO": "support@updates.mulls.io"
+        "EMAIL_REPLY_TO": "support@updates.mulls.io",
+        "R2_DEFAULT_BUCKET": "documents"
     },
     /**
      * Note: Use secrets to store sensitive data.
@@ -130,6 +137,28 @@
         "EvaluatorOptimizer"
       ]
       },
+    ],
+    "r2_buckets": [
+      {
+        "binding": "documents",
+        "bucket_name": "documents"
+      },
+      {
+        "binding": "images",
+        "bucket_name": "images"
+      },
+      {
+        "binding": "videos",
+        "bucket_name": "videos"
+      },
+      {
+        "binding": "chum",
+        "bucket_name": "chum"
+      },
+      {
+        "binding": "sd-chat",
+        "bucket_name": "sd-chat"
+      }
     ],
 
     "d1_databases": [

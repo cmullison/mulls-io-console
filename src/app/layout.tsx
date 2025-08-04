@@ -21,6 +21,14 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   metadataBase: new URL(SITE_URL),
+  icons: {
+    icon: [
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.png',
+    apple: '/apple-touch-icon.png',
+  },
   keywords: ["Chris Mullison", "Chris Mulls", "Mulls.io", "Mullsio", "monitoring", "console", "dashboard", "configuration"],
   authors: [{ name: "Chris Mullison" }],
   creator: "Chris Mullison",

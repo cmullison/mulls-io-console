@@ -8,9 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: ^2.0.0
+        version: 2.0.0(zod@3.25.67)
       '@ai-sdk/openai':
         specifier: ^2.0.0
         version: 2.0.0(zod@3.25.67)
+      '@cloudflare/workers-types':
+        specifier: ^4.20250803.0
+        version: 4.20250803.0
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.1.0)
@@ -242,6 +248,9 @@ importers:
       usehooks-ts:
         specifier: ^3.1.0
         version: 3.1.1(react@19.1.0)
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -308,6 +317,12 @@ importers:
         version: 4.27.0(@cloudflare/workers-types@4.20250803.0)
 
 packages:
+
+  '@ai-sdk/anthropic@2.0.0':
+    resolution: {integrity: sha512-uyyaO4KhxoIKZztREqLPh+6/K3ZJx/rp72JKoUEL9/kC+vfQTThUfPnY/bUryUpcnawx8IY/tSoYNOi/8PCv7w==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
 
   '@ai-sdk/gateway@1.0.0':
     resolution: {integrity: sha512-VEm87DyRx1yIPywbTy8ntoyh4jEDv1rJ88m+2I7zOm08jJI5BhFtAWh0OF6YzZu1Vu4NxhOWO4ssGdsqydDQ3A==}
@@ -7420,6 +7435,10 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
+
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
@@ -7619,6 +7638,12 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
+
+  '@ai-sdk/anthropic@2.0.0(zod@3.25.67)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.0(zod@3.25.67)
+      zod: 3.25.67
 
   '@ai-sdk/gateway@1.0.0(zod@3.25.67)':
     dependencies:
@@ -16622,6 +16647,8 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   utils-merge@1.0.1: {}
+
+  uuid@11.1.0: {}
 
   uuid@9.0.1: {}
 
