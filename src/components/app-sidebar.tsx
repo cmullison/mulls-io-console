@@ -13,6 +13,7 @@ import {
   Users,
   Bot,
   Globe,
+  ChartBar,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -103,6 +104,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Landing Page",
         url: "/dashboard/landing-page" as Route,
         icon: Globe,
+      },
+      {
+        title: "Analytics",
+        url: "/dashboard/analytics" as Route,
+        icon: ChartBar,
       },
       {
         title: "Settings",
