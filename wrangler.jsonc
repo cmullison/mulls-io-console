@@ -50,7 +50,8 @@
         "EMAIL_FROM": "no-reply@updates.mulls.io",
         "EMAIL_FROM_NAME": "Mulls.io",
         "EMAIL_REPLY_TO": "support@updates.mulls.io",
-        "R2_DEFAULT_BUCKET": "documents"
+        "R2_DEFAULT_BUCKET": "documents",
+        "CLOUDFLARE_ACCOUNT_ID": "1e9408c2be90eae9689a2b6942ca5d87"
     },
     /**
      * Note: Use secrets to store sensitive data.

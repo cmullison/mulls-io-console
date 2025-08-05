@@ -15,6 +15,13 @@ import {
   Globe,
   ChartBar,
   HardDrive,
+  FileText,
+  FileCode,
+  Image,
+  ImageIcon,
+  VideoIcon,
+  MusicIcon,
+  MessageCircle,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -102,7 +109,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: Bot,
       },
       {
-        title: "Landing Page",
+        title: "Chat",
+        url: "/dashboard/chat" as Route,
+        icon: MessageCircle,
+      },
+      {
+        title: "Image Generator",
+        url: "/dashboard/image-generator" as Route,
+        icon: ImageIcon,
+      },
+      {
+        title: "Video Generator",
+        url: "/dashboard/video-generator" as Route,
+        icon: VideoIcon,
+      },
+      {
+        title: "Audio Generator",
+        url: "/dashboard/audio-generator" as Route,
+        icon: MusicIcon,
+      },
+      {
+        title: "Copywriter",
         url: "/dashboard/landing-page" as Route,
         icon: Globe,
       },
@@ -115,6 +142,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Files",
         url: "/dashboard/files" as Route,
         icon: HardDrive,
+      },
+      {
+        title: "Prompts",
+        url: "/dashboard/prompts" as Route,
+        icon: FileText,
+      },
+      {
+        title: "Templates",
+        url: "/dashboard/templates" as Route,
+        icon: FileCode,
+      },
+      {
+        title: "Gallery",
+        url: "/dashboard/gallery" as Route,
+        icon: Image,
       },
       {
         title: "Settings",

@@ -43,9 +43,11 @@ export function R2FilePreview({
   const [fileContent, setFileContent] = useState<string>("");
   const [contentType, setContentType] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     if (open && file) {
+      setVideoError(false);
       loadFilePreview();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,6 +118,26 @@ export function R2FilePreview({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  const debugVideoInfo = () => {
+    if (typeof window !== "undefined") {
+      const video = document.createElement("video");
+      const supportedFormats = [
+        "video/mp4",
+        "video/webm",
+        "video/ogg",
+        "video/avi",
+        "video/mov",
+        "video/wmv",
+      ];
+
+      console.log("Browser video support:");
+      supportedFormats.forEach((format) => {
+        const canPlay = video.canPlayType(format);
+        console.log(`${format}: ${canPlay || "no"}`);
+      });
+    }
+  };
+
   const renderPreview = () => {
     if (loading) {
       return (
@@ -159,7 +181,17 @@ export function R2FilePreview({
     if (contentType.startsWith("audio/")) {
       return (
         <div className="flex justify-center p-4">
-          <audio controls className="w-full max-w-md">
+          <audio
+            controls
+            preload="metadata"
+            className="w-full max-w-md"
+            onError={(e) => {
+              console.error("Audio playback error:", e);
+              toast.error(
+                "Failed to load audio. Try downloading the file instead."
+              );
+            }}
+          >
             <source src={fileUrl} type={contentType} />
             Your browser does not support the audio element.
           </audio>
@@ -169,9 +201,50 @@ export function R2FilePreview({
 
     // Video preview
     if (contentType.startsWith("video/")) {
+      if (videoError) {
+        return (
+          <div className="p-4">
+            <Card className="p-4 text-center">
+              <FileVideoIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground mb-4">
+                Video playback failed. This may be due to an unsupported format
+                or encoding.
+              </p>
+              <Button asChild>
+                <a href={fileUrl} download>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Video
+                </a>
+              </Button>
+            </Card>
+          </div>
+        );
+      }
+
       return (
         <div className="flex justify-center p-4">
-          <video controls className="max-w-full max-h-96 rounded-lg border">
+          <video
+            controls
+            preload="metadata"
+            className="max-w-full max-h-96 rounded-lg border"
+            onError={(e) => {
+              console.error("Video playback error:", e);
+              setVideoError(true);
+              toast.error(
+                "Video playback failed. You can download it to view with a video player."
+              );
+            }}
+            onLoadStart={() => {
+              console.log("Video loading started for:", file.key);
+              debugVideoInfo();
+            }}
+            onCanPlay={() => {
+              console.log("Video can start playing:", file.key);
+            }}
+            onLoadedMetadata={() => {
+              console.log("Video metadata loaded:", file.key);
+            }}
+          >
             <source src={fileUrl} type={contentType} />
             Your browser does not support the video element.
           </video>
@@ -241,7 +314,10 @@ export function R2FilePreview({
 
               {contentType && (
                 <>
-                  <Separator orientation="vertical" className="h-4 hidden sm:block" />
+                  <Separator
+                    orientation="vertical"
+                    className="h-4 hidden sm:block"
+                  />
                   <div className="flex items-center gap-2">
                     <span>Type:</span>
                     <Badge variant="secondary">{contentType}</Badge>
@@ -251,7 +327,10 @@ export function R2FilePreview({
 
               {file.lastModified && (
                 <>
-                  <Separator orientation="vertical" className="h-4 hidden sm:block" />
+                  <Separator
+                    orientation="vertical"
+                    className="h-4 hidden sm:block"
+                  />
                   <div className="flex items-center gap-2">
                     <span>Modified:</span>
                     <Badge variant="secondary">

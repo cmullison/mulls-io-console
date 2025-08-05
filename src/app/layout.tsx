@@ -23,13 +23,22 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   icons: {
     icon: [
-      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
     ],
-    shortcut: '/favicon.png',
-    apple: '/apple-touch-icon.png',
+    shortcut: "/favicon.png",
+    apple: "/apple-touch-icon.png",
   },
-  keywords: ["Chris Mullison", "Chris Mulls", "Mulls.io", "Mullsio", "monitoring", "console", "dashboard", "configuration"],
+  keywords: [
+    "Chris Mullison",
+    "Chris Mulls",
+    "Mulls.io",
+    "Mullsio",
+    "monitoring",
+    "console",
+    "dashboard",
+    "configuration",
+  ],
   authors: [{ name: "Chris Mullison" }],
   creator: "Chris Mullison",
   publisher: "Chris Mullison",
@@ -88,21 +97,21 @@ export default function BaseLayout({
   children: React.ReactNode;
 }>) {
   const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
     name: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    applicationCategory: 'BusinessApplication',
-    operatingSystem: 'Web',
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
     author: {
-      '@type': 'Person',
-      name: 'Chris Mullison',
-      url: 'https://mulls.io',
+      "@type": "Person",
+      name: "Chris Mullison",
+      url: "https://mulls.io",
     },
     publisher: {
-      '@type': 'Person',
-      name: 'Chris Mullison',
+      "@type": "Person",
+      name: "Chris Mullison",
     },
   };
 
@@ -120,7 +129,7 @@ export default function BaseLayout({
           shadow="0 0 10px #000, 0 0 5px #000"
           height={4}
         />
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider delayDuration={100} skipDelayDuration={50}>
             {children}
           </TooltipProvider>

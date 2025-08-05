@@ -20,7 +20,6 @@ type WorkflowType =
   | "evaluatorOptimizer";
 
 interface OutputDisplayProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   output: any;
   onCopy: (text: string) => void;
   copiedText: string;
@@ -158,7 +157,6 @@ export function OutputDisplay({
             <FileText className="h-4 w-4" />
             File Changes
           </Label>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {output.changes?.map((change: any, index: number) => (
             <Card key={index} className="p-4 bg-muted/20">
               <div className="space-y-3">
@@ -249,7 +247,6 @@ export function OutputDisplay({
             <Code className="h-4 w-4" />
             Detailed Reviews
           </Label>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {output.reviews?.map((review: any, index: number) => (
             <Card key={index} className="p-4">
               <div className="space-y-3">
@@ -350,7 +347,6 @@ export function OutputDisplay({
   }
 
   // Default rendering for other types or simple outputs
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderValue = (key: string, value: any) => {
     if (typeof value === "string") {
       return (
@@ -406,7 +402,9 @@ export function OutputDisplay({
                   <div className="space-y-2">
                     {Object.entries(item).map(([itemKey, itemValue]) => (
                       <div key={itemKey} className="text-sm">
-                        <span className="font-medium text-muted-foreground">{itemKey}:</span>
+                        <span className="font-medium text-muted-foreground">
+                          {itemKey}:
+                        </span>
                         <div className="mt-1 text-foreground">
                           {typeof itemValue === "string" ? (
                             <MarkdownText content={itemValue} />
@@ -455,19 +453,25 @@ export function OutputDisplay({
             <div className="space-y-2">
               {Object.entries(value).map(([subKey, subValue]) => (
                 <div key={subKey} className="text-sm">
-                  <span className="font-medium text-muted-foreground">{subKey}:</span>
+                  <span className="font-medium text-muted-foreground">
+                    {subKey}:
+                  </span>
                   <div className="mt-1">
                     {typeof subValue === "string" ? (
                       <MarkdownText content={subValue} />
                     ) : Array.isArray(subValue) ? (
                       <div className="space-y-1">
                         {subValue.map((item, idx) => (
-                          <div key={idx} className="bg-muted/50 p-2 rounded text-xs">
+                          <div
+                            key={idx}
+                            className="bg-muted/50 p-2 rounded text-xs"
+                          >
                             {typeof item === "object" ? (
                               <div className="space-y-1">
                                 {Object.entries(item).map(([k, v]) => (
                                   <div key={k}>
-                                    <span className="font-medium">{k}:</span> {String(v)}
+                                    <span className="font-medium">{k}:</span>{" "}
+                                    {String(v)}
                                   </div>
                                 ))}
                               </div>
@@ -481,7 +485,8 @@ export function OutputDisplay({
                       <div className="bg-muted/50 p-2 rounded text-xs space-y-1">
                         {Object.entries(subValue).map(([k, v]) => (
                           <div key={k}>
-                            <span className="font-medium">{k}:</span> {String(v)}
+                            <span className="font-medium">{k}:</span>{" "}
+                            {String(v)}
                           </div>
                         ))}
                       </div>

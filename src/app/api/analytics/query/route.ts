@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/api/analytics/query/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import type { AnalyticsEngineDataset } from '@cloudflare/workers-types';

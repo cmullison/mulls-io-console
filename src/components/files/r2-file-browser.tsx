@@ -18,6 +18,9 @@ import {
 } from "lucide-react";
 import { R2FileUpload } from "./r2-file-upload";
 import { R2FilePreview } from "./r2-file-preview";
+import { R2Pagination } from "./r2-pagination";
+import { R2SortControls, type SortBy, type SortOrder } from "./r2-sort-controls";
+import { R2FileSkeleton } from "./r2-file-skeleton";
 import { toast } from "sonner";
 import { r2Config } from "@/lib/r2-config";
 import { getAvailableBuckets } from "@/lib/r2-bindings";
@@ -42,6 +45,12 @@ interface R2ListResponse {
   files: R2Object[];
   folders: R2Object[];
   truncated: boolean;
+  pagination?: {
+    hasMore: boolean;
+    cursor?: string;
+    pageSize: number;
+    totalEstimate: number;
+  };
   error?: string;
 }
 
@@ -72,21 +81,51 @@ export function R2FileBrowser({
   const [newFolderName, setNewFolderName] = useState("");
   const [creatingFolder, setCreatingFolder] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalEstimate, setTotalEstimate] = useState(0);
+
+  // Sorting state
+  const [sortBy, setSortBy] = useState<SortBy>('name');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
   const availableBuckets = getAvailableBuckets();
 
   useEffect(() => {
+    // Reset pagination when path, bucket, or sorting changes
+    setCurrentPage(1);
+    setCursor(null);
     loadFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPath, currentBucket]);
+  }, [currentPath, currentBucket, sortBy, sortOrder]);
+
+  useEffect(() => {
+    // Load files when pagination changes (but not on initial load)
+    if (currentPage > 1) {
+      loadFiles();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize]);
 
   const loadFiles = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
+      
       if (currentPath) {
         params.set("prefix", currentPath);
       }
       params.set("delimiter", "/");
+      params.set("maxKeys", pageSize.toString());
+      params.set("sortBy", sortBy);
+      params.set("sortOrder", sortOrder);
+      
+      if (currentPage > 1 && cursor) {
+        params.set("cursor", cursor);
+      }
 
       const response = await fetch(
         `/api/r2/buckets/${currentBucket}?${params}`
@@ -97,6 +136,12 @@ export function R2FileBrowser({
 
       const data: R2ListResponse = await response.json();
       setObjects([...data.folders, ...data.files]);
+      
+      if (data.pagination) {
+        setHasMore(data.pagination.hasMore);
+        setCursor(data.pagination.cursor || null);
+        setTotalEstimate(data.pagination.totalEstimate);
+      }
     } catch (error) {
       console.error("Error loading files:", error);
       toast.error("Failed to load files");
@@ -118,6 +163,26 @@ export function R2FileBrowser({
     const pathParts = currentPath.split("/").filter(Boolean);
     pathParts.pop();
     setCurrentPath(pathParts.join("/") + (pathParts.length > 0 ? "/" : ""));
+  };
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page
+    setCursor(null);
+  };
+
+  // Sorting handlers
+  const handleSortByChange = (newSortBy: SortBy) => {
+    setSortBy(newSortBy);
+  };
+
+  const handleSortOrderChange = (newSortOrder: SortOrder) => {
+    setSortOrder(newSortOrder);
   };
 
   const createFolder = async () => {
@@ -239,13 +304,21 @@ export function R2FileBrowser({
       {/* Actions */}
       <Card className="p-4 mb-4">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             {currentPath && (
               <Button variant="outline" size="sm" onClick={navigateUp}>
                 <ArrowLeftIcon className="h-4 w-4 mr-2" />
                 Back
               </Button>
             )}
+            
+            <R2SortControls
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortByChange={handleSortByChange}
+              onSortOrderChange={handleSortOrderChange}
+              disabled={loading}
+            />
           </div>
 
           <div className="flex items-center gap-2">
@@ -283,9 +356,7 @@ export function R2FileBrowser({
       {/* File List */}
       <Card className="p-4 mb-4">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-          </div>
+          <R2FileSkeleton count={pageSize} />
         ) : objects.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No files or folders found
@@ -376,6 +447,21 @@ export function R2FileBrowser({
           </div>
         )}
       </Card>
+
+      {/* Pagination */}
+      {(objects.length > 0 || hasMore) && (
+        <Card className="mb-4">
+          <R2Pagination
+            currentPage={currentPage}
+            hasMore={hasMore}
+            pageSize={pageSize}
+            totalEstimate={totalEstimate}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            loading={loading}
+          />
+        </Card>
+      )}
 
       {/* Upload Modal */}
       <R2FileUpload

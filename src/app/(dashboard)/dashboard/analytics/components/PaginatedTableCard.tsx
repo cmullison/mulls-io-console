@@ -8,7 +8,6 @@ import { SearchFilters } from "@/lib/types";
 interface PaginatedTableCardProps {
   siteId: string;
   interval: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dataFetcher: any;
   columnHeaders: string[];
   filters?: SearchFilters;

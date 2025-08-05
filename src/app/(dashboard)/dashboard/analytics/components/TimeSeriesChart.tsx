@@ -29,7 +29,6 @@ function dateStringToLocalDateObj(dateString: string): Date {
   return date;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CustomTooltip(props: any) {
   const { active, payload, label } = props;
 

@@ -72,20 +72,22 @@ export default async function TeamsIndexPage() {
         bannerDescription="Collaborate with others on projects and share resources."
       />
       <div className="container pt-6 mx-auto px-5 pb-12">
-        <div className="mb-8 flex items-center justify-end">
-          <Button asChild>
-            <Link href={"/dashboard/teams/create" as Route}>
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Create Team
-            </Link>
-          </Button>
-        </div>
+        {teams.length > 0 && (
+          <div className="mb-8 flex items-center justify-end">
+            <Button asChild>
+              <Link href={"/dashboard/teams/create" as Route}>
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Create Team
+              </Link>
+            </Button>
+          </div>
+        )}
 
         {/* Show pending invitations */}
         <PendingInvitations />
 
         {teams.length === 0 ? (
-          <Card className="border-dashed border-2">
+          <Card className="mt-8 border-dashed border-2">
             <CardHeader>
               <CardTitle className="text-xl">
                 You don&apos;t have any teams yet

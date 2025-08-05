@@ -282,6 +282,42 @@ export const teamInvitationTable = sqliteTable("team_invitation", {
   index('team_invitation_token_idx').on(table.token),
 ]));
 
+// Chat tables
+export const chatTable = sqliteTable("chat", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `chat_${createId()}`).notNull(),
+  title: text().notNull(),
+  userId: text().notNull().references(() => userTable.id),
+  visibility: text({ enum: ['public', 'private'] }).default('private').notNull(),
+}, (table) => ([
+  index('chat_user_id_idx').on(table.userId),
+  index('chat_visibility_idx').on(table.visibility),
+]));
+
+export const messageTable = sqliteTable("message", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `msg_${createId()}`).notNull(),
+  chatId: text().notNull().references(() => chatTable.id),
+  role: text().notNull(), // 'user' | 'assistant' | 'system'
+  parts: text({ mode: 'json' }).notNull(), // JSON array of message parts
+  attachments: text({ mode: 'json' }).notNull(), // JSON array of attachments
+}, (table) => ([
+  index('message_chat_id_idx').on(table.chatId),
+  index('message_role_idx').on(table.role),
+]));
+
+export const voteTable = sqliteTable("vote", {
+  ...commonColumns,
+  chatId: text().notNull().references(() => chatTable.id),
+  messageId: text().notNull().references(() => messageTable.id),
+  userId: text().notNull().references(() => userTable.id),
+  isUpvoted: integer({ mode: 'boolean' }).notNull(),
+}, (table) => ([
+  index('vote_chat_id_idx').on(table.chatId),
+  index('vote_message_id_idx').on(table.messageId),
+  index('vote_user_id_idx').on(table.userId),
+]));
+
 export const teamRelations = relations(teamTable, ({ many }) => ({
   memberships: many(teamMembershipTable),
   invitations: many(teamInvitationTable),
@@ -344,6 +380,40 @@ export const userRelations = relations(userTable, ({ many }) => ({
   creditTransactions: many(creditTransactionTable),
   purchasedItems: many(purchasedItemsTable),
   teamMemberships: many(teamMembershipTable),
+  chats: many(chatTable),
+  votes: many(voteTable),
+}));
+
+export const chatRelations = relations(chatTable, ({ one, many }) => ({
+  user: one(userTable, {
+    fields: [chatTable.userId],
+    references: [userTable.id],
+  }),
+  messages: many(messageTable),
+  votes: many(voteTable),
+}));
+
+export const messageRelations = relations(messageTable, ({ one, many }) => ({
+  chat: one(chatTable, {
+    fields: [messageTable.chatId],
+    references: [chatTable.id],
+  }),
+  votes: many(voteTable),
+}));
+
+export const voteRelations = relations(voteTable, ({ one }) => ({
+  chat: one(chatTable, {
+    fields: [voteTable.chatId],
+    references: [chatTable.id],
+  }),
+  message: one(messageTable, {
+    fields: [voteTable.messageId],
+    references: [messageTable.id],
+  }),
+  user: one(userTable, {
+    fields: [voteTable.userId],
+    references: [userTable.id],
+  }),
 }));
 
 export const passKeyCredentialRelations = relations(passKeyCredentialTable, ({ one }) => ({
@@ -361,3 +431,6 @@ export type Team = InferSelectModel<typeof teamTable>;
 export type TeamMembership = InferSelectModel<typeof teamMembershipTable>;
 export type TeamRole = InferSelectModel<typeof teamRoleTable>;
 export type TeamInvitation = InferSelectModel<typeof teamInvitationTable>;
+export type Chat = InferSelectModel<typeof chatTable>;
+export type Message = InferSelectModel<typeof messageTable>;
+export type Vote = InferSelectModel<typeof voteTable>;

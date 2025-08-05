@@ -9,13 +9,7 @@ import { orchestratorCreatorCode } from "./03-orchestrator-creator";
 import { evaluatorOptimizerCode } from "./04-evaluator-optimizer";
 import { useAgent } from "agents/react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +21,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Play,
   Square,
@@ -50,13 +50,6 @@ type WorkflowType =
   | "parallelSections"
   | "orchestratorCreator"
   | "evaluatorOptimizer";
-
-type PatternProps = {
-  type: WorkflowType;
-  title: string;
-  description: string;
-  index: number;
-};
 
 type FormState = {
   sequentialBuilder: {
@@ -130,11 +123,11 @@ function getOrCreateSessionId() {
 
 function PatternSection({
   type,
-  title,
-  description,
-  index,
   sessionId,
-}: PatternProps & { sessionId: string }) {
+}: {
+  type: WorkflowType;
+  sessionId: string;
+}) {
   const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus>({
     isRunning: false,
     output: "",
@@ -606,91 +599,76 @@ function PatternSection({
           type: "run",
         })
       );
-      showToast.info(`Started ${title} workflow...`);
+      showToast.info(`Started ${type} workflow...`);
     } catch {
-      showToast.error(`Failed to start ${title} workflow`);
+      showToast.error(`Failed to start ${type} workflow`);
     }
   };
 
   return (
-    <Card className="pb-6 !border-b-1 !border-t-0 !border-l-0 !border-r-0 !rounded-none !shadow-none">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Badge variant="outline">{index + 1}</Badge>
-              {title}
-            </CardTitle>
-            <CardDescription className="mt-2">{description}</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {getFormContent()}
+    <div className="space-y-4">
+      {getFormContent()}
 
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={runWorkflow}
-              disabled={workflowStatus.isRunning}
-              className="flex items-center gap-2"
-            >
-              {workflowStatus.isRunning ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Running...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4" />
-                  {workflowStatus.output ? "Run Again" : "Run"}
-                </>
-              )}
-            </Button>
-            {workflowStatus.isRunning && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  socket.send(JSON.stringify({ type: "stop" }));
-                  showToast.info(`Stopping ${title} workflow...`);
-                }}
-                className="flex items-center gap-2"
-              >
-                <Square className="h-3 w-3" />
-                Stop
-              </Button>
-            )}
-          </div>
-
-          {workflowStatus.output ? (
-            <div className="mt-6">
-              <div className="flex items-center gap-2 mb-4">
-                {getPatternIcon()}
-                <Label className="text-sm font-medium">Generated Content</Label>
-              </div>
-              <OutputDisplay
-                output={parseOutput(workflowStatus.output)}
-                onCopy={copyToClipboard}
-                copiedText={copiedText}
-                type={type}
-              />
-            </div>
+      <div className="flex items-center gap-2">
+        <Button
+          onClick={runWorkflow}
+          disabled={workflowStatus.isRunning}
+          className="flex items-center gap-2"
+        >
+          {workflowStatus.isRunning ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Running...
+            </>
           ) : (
-            <div className="mt-6">
-              <Card className="p-8 text-center bg-muted/20 border-dashed">
-                <div className="flex flex-col items-center gap-3">
-                  {getPatternIcon()}
-                  <p className="text-muted-foreground">
-                    Fill in the form above and click &apos;Run&apos; to generate{" "}
-                    {title.toLowerCase()}
-                  </p>
-                </div>
-              </Card>
-            </div>
+            <>
+              <Play className="h-4 w-4" />
+              {workflowStatus.output ? "Run Again" : "Run"}
+            </>
           )}
+        </Button>
+        {workflowStatus.isRunning && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              socket.send(JSON.stringify({ type: "stop" }));
+              showToast.info(`Stopping ${type} workflow...`);
+            }}
+            className="flex items-center gap-2"
+          >
+            <Square className="h-3 w-3" />
+            Stop
+          </Button>
+        )}
+      </div>
+
+      {workflowStatus.output ? (
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            {getPatternIcon()}
+            <Label className="text-sm font-medium">Generated Content</Label>
+          </div>
+          <OutputDisplay
+            output={parseOutput(workflowStatus.output)}
+            onCopy={copyToClipboard}
+            copiedText={copiedText}
+            type={type}
+          />
         </div>
-      </CardContent>
-    </Card>
+      ) : (
+        <div className="mt-6">
+          <Card className="p-8 text-center bg-muted/20 border-dashed">
+            <div className="flex flex-col items-center gap-3">
+              {getPatternIcon()}
+              <p className="text-muted-foreground">
+                Fill in the form above and click &apos;Run&apos; to generate{" "}
+                {type}
+              </p>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -755,23 +733,41 @@ export default function LandingPageApp() {
         bannerDescription="Create high-converting landing pages with AI-powered copywriting and design guidance."
         bannerTitle="Landing Page Creator"
       />
-      <div className="container">
+      <div className="container mx-auto px-4 py-8 pb-12">
         <main>
-          {(
-            Object.entries(patterns) as [
-              WorkflowType,
-              (typeof patterns)[keyof typeof patterns]
-            ][]
-          ).map(([type, pattern], index) => (
-            <PatternSection
-              key={type}
-              type={type}
-              title={pattern.title}
-              description={pattern.description}
-              index={index}
-              sessionId={sessionId}
-            />
-          ))}
+          <Accordion type="multiple" className="w-full space-y-6">
+            {(
+              Object.entries(patterns) as [
+                WorkflowType,
+                (typeof patterns)[keyof typeof patterns]
+              ][]
+            ).map(([type, pattern], index) => (
+              <AccordionItem
+                key={type}
+                value={type}
+                className="border border-border rounded-lg px-6 bg-card hover:bg-card/80 transition-colors shadow-sm !border-b-0"
+              >
+                <AccordionTrigger className="hover:no-underline py-6">
+                  <div className="flex items-center gap-3 text-left w-full">
+                    <Badge variant="outline" className="shrink-0">
+                      {index + 1}
+                    </Badge>
+                    <div className="space-y-1 flex-1">
+                      <div className="font-semibold text-lg">
+                        {pattern.title}
+                      </div>
+                      <div className="text-sm text-muted-foreground font-normal">
+                        {pattern.description}
+                      </div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-6">
+                  <PatternSection type={type} sessionId={sessionId} />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </main>
       </div>
     </>
