@@ -94,7 +94,7 @@ export function ChatLayout({
                 Model:{" "}
                 <span className="font-normal text-muted-foreground">
                   {chatModels.find((m) => m.id === chatModel)?.name ||
-                    chatModel}
+                    selectedModel}
                 </span>
               </span>
             </div>

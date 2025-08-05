@@ -42,18 +42,6 @@ export const chatModels: Array<ChatModel> = [
     provider: 'openai',
   },
   {
-    id: 'gpt-oss-20b',
-    name: 'GPT-OSS-20B',
-    description: 'Medium-sized open weight model',
-    provider: 'openai',
-  },
-  {
-    id: 'gpt-oss-120b',
-    name: 'GPT-OSS-120B',
-    description: 'Large open weight model',
-    provider: 'openai',
-  },
-  {
     id: 'o3',
     name: 'o3',
     description: 'Latest reasoning model',

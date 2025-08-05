@@ -4,14 +4,24 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
 // Initialize AI providers
-const anthropic = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: process.env.AI_GATEWAY_ACCOUNT_ID && process.env.AI_GATEWAY_ID && process.env.AI_GATEWAY_TOKEN
     ? `https://gateway.ai.cloudflare.com/v1/${process.env.AI_GATEWAY_ACCOUNT_ID}/${process.env.AI_GATEWAY_ID}/openai`
+    : undefined,
+  headers: process.env.AI_GATEWAY_TOKEN
+    ? {
+        "cf-aig-authorization": `Bearer ${process.env.AI_GATEWAY_TOKEN}`,
+      }
+    : undefined,
+});
+
+const anthropic = createAnthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  baseURL: process.env.AI_GATEWAY_ACCOUNT_ID && process.env.AI_GATEWAY_ID && process.env.AI_GATEWAY_TOKEN
+    ? `https://gateway.ai.cloudflare.com/v1/${process.env.AI_GATEWAY_ACCOUNT_ID}/${process.env.AI_GATEWAY_ID}/anthropic`
     : undefined,
   headers: process.env.AI_GATEWAY_TOKEN
     ? {
@@ -34,6 +44,7 @@ export const aiProvider = customProvider({
     'o4-mini': openai('o4-mini'),
     'gpt-4.1': openai('gpt-4.1'),
     'o3': openai('o3'),
+    'gpt-4o': openai('gpt-4o'),
 
     // Google models
     'gemini-2.5-pro': google('gemini-2.5-pro'),
@@ -44,7 +55,7 @@ export const aiProvider = customProvider({
 
 export function getModelProvider(modelId: string): 'anthropic' | 'openai' | 'google' | 'unknown' {
   if (modelId.startsWith('claude-')) return 'anthropic';
-  if (modelId.startsWith('gpt-') || modelId.startsWith('o4-') || modelId.startsWith('o3')) return 'openai';
+  if (modelId.startsWith('gpt-') || modelId.startsWith('o4-') || modelId.startsWith('o3') || modelId.startsWith('gpt-oss')) return 'openai';
   if (modelId.startsWith('gemini-')) return 'google';
   return 'unknown';
 }

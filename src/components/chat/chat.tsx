@@ -30,7 +30,7 @@ export function Chat({
   const [input, setInput] = useState("");
   const selectedModelRef = useRef(selectedModel);
   const [messageCount, setMessageCount] = useState(initialMessages.length);
-  
+
   useEffect(() => {
     selectedModelRef.current = selectedModel;
   }, [selectedModel]);
@@ -81,8 +81,8 @@ export function Chat({
     if (messageCount === 0 && onFirstMessage) {
       onFirstMessage();
     }
-    
-    setMessageCount(prev => prev + 1);
+
+    setMessageCount((prev) => prev + 1);
     sendMessage(userMessage);
     setInput("");
   };
@@ -119,32 +119,45 @@ export function Chat({
                   </div>
                   <div>
                     {message.role === "assistant" ? (
-                      <ReactMarkdown 
+                      <ReactMarkdown
+                        // @ts-expect-error - className is not typed correctly
                         className="prose prose-sm max-w-none dark:prose-invert"
                         components={{
-                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          p: ({ children }) => (
+                            <p className="mb-2 last:mb-0">{children}</p>
+                          ),
                           code: ({ children, className }) => {
                             const isInline = !className;
                             return isInline ? (
-                              <code className="bg-muted px-1 py-0.5 rounded text-sm">{children}</code>
+                              <code className="bg-muted px-1 py-0.5 rounded text-sm">
+                                {children}
+                              </code>
                             ) : (
-                              <code className="block bg-muted p-2 rounded text-sm overflow-x-auto">{children}</code>
+                              <code className="block bg-muted p-2 rounded text-sm overflow-x-auto">
+                                {children}
+                              </code>
                             );
                           },
-                          pre: ({ children }) => <div className="bg-muted p-2 rounded overflow-x-auto">{children}</div>,
+                          pre: ({ children }) => (
+                            <div className="bg-muted p-2 rounded overflow-x-auto">
+                              {children}
+                            </div>
+                          ),
                         }}
                       >
                         {message.parts
-                          ? message.parts.map((part: any) => {
-                              switch (part.type) {
-                                case 'text':
-                                  return part.text;
-                                case 'reasoning':
-                                  return `*${part.reasoning}*`;
-                                default:
-                                  return part.text || '';
-                              }
-                            }).join('')
+                          ? message.parts
+                              .map((part: any) => {
+                                switch (part.type) {
+                                  case "text":
+                                    return part.text;
+                                  case "reasoning":
+                                    return `*${part.reasoning}*`;
+                                  default:
+                                    return part.text || "";
+                                }
+                              })
+                              .join("")
                           : message.content || ""}
                       </ReactMarkdown>
                     ) : (

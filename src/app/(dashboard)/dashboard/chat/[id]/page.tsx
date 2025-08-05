@@ -91,7 +91,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
         initialMessages={messages}
         userId={session.user.id}
         chatTitle={chat.title}
-        chatModel={chat.model}
+        chatModel={chat.model || undefined}
       />
     </>
   );

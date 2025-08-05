@@ -103,7 +103,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
           isActive={isActive}
           className="group data-[active=true]:bg-accent/50"
         >
-          <div className="flex items-center w-full">
+          <div className="flex items-center w-full pr-2">
             {isEditing ? (
               <Input
                 ref={inputRef}
@@ -111,13 +111,13 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
                 onChange={(e) => setEditedTitle(e.target.value)}
                 onBlur={handleSaveEdit}
                 onKeyDown={handleKeyDown}
-                className="h-7 text-sm border-0 bg-transparent focus-visible:ring-1"
+                className="h-7 text-sm border-0 bg-transparent focus-visible:ring-1 flex-1 mr-2"
                 autoFocus
               />
             ) : (
               <Link
                 href={`/dashboard/chat/${chat.id}`}
-                className="flex items-center w-full min-w-0"
+                className="flex items-center flex-1 min-w-0 mr-2"
                 onClick={() => setOpenMobile(false)}
               >
                 <span className="truncate text-sm">{chat.title}</span>
@@ -128,7 +128,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                 >
                   <MoreHorizontal className="h-3 w-3" />
                 </Button>
