@@ -84,8 +84,9 @@ export function SidebarHistory({ userId }: SidebarHistoryProps) {
     }
   );
 
-  const handleDelete = (chatId: string) => {
+  const handleDelete = async (chatId: string) => {
     if (data) {
+      // Optimistically update the UI
       mutate(
         {
           ...data,
@@ -93,6 +94,11 @@ export function SidebarHistory({ userId }: SidebarHistoryProps) {
         },
         false
       );
+      
+      // Revalidate the data from server to ensure consistency
+      setTimeout(() => {
+        mutate();
+      }, 100);
     }
   };
 

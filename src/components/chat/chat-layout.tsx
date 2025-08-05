@@ -1,27 +1,70 @@
 "use client";
 
-import { useState } from 'react';
-import { Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Chat } from './chat';
-import { ChatSidebar } from './chat-sidebar';
+import { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Chat } from "./chat";
+import { ChatSidebar } from "./chat-sidebar";
+import { ModelSelector } from "./model-selector";
+import { chatModels, DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 
 interface ChatLayoutProps {
   initialChatId?: string;
   initialMessages?: any[];
   userId?: string;
+  chatTitle?: string;
+  chatModel?: string;
 }
 
-export function ChatLayout({ initialChatId, initialMessages = [], userId }: ChatLayoutProps) {
+export function ChatLayout({
+  initialChatId,
+  initialMessages = [],
+  userId,
+  chatTitle,
+  chatModel,
+}: ChatLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_CHAT_MODEL);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMessages, setHasMessages] = useState(initialMessages.length > 0);
+
+  // Load sidebar state and selected model from localStorage on mount
+  useEffect(() => {
+    const savedSidebarState = localStorage.getItem("chat-sidebar-open");
+    if (savedSidebarState !== null) {
+      setSidebarOpen(JSON.parse(savedSidebarState));
+    }
+
+    const savedModel = localStorage.getItem("chat-selected-model");
+    if (savedModel) {
+      setSelectedModel(savedModel);
+    }
+  }, []);
+
+  // Save sidebar state to localStorage when it changes
+  const handleSidebarToggle = (open: boolean) => {
+    setSidebarOpen(open);
+    localStorage.setItem("chat-sidebar-open", JSON.stringify(open));
+  };
+
+  // Save selected model to localStorage when it changes
+  const handleModelChange = (modelId: string) => {
+    setSelectedModel(modelId);
+    localStorage.setItem("chat-selected-model", modelId);
+  };
 
   return (
     <div className="flex h-full w-full">
       {/* Chat Sidebar */}
-      <div className={`${sidebarOpen ? 'block' : 'hidden'} md:block transition-all duration-200`}>
+      <div
+        className={`${
+          sidebarOpen ? "block" : "hidden"
+        } md:block transition-all duration-200 h-full`}
+      >
         <ChatSidebar
           isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+          onClose={() => handleSidebarToggle(false)}
           userId={userId}
         />
       </div>
@@ -29,25 +72,49 @@ export function ChatLayout({ initialChatId, initialMessages = [], userId }: Chat
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header with toggle button */}
-        <div className="flex items-center justify-between p-4 border-b bg-background">
+        <div className="flex items-center justify-between h-12 p-4 border-b bg-background">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => handleSidebarToggle(!sidebarOpen)}
               className="h-8 w-8 p-0"
             >
               <Menu className="h-4 w-4" />
             </Button>
-            <h1 className="text-lg font-semibold">Chat</h1>
+            {hasMessages ? (
+              <h1 className="text-lg font-semibold truncate">{chatTitle}</h1>
+            ) : (
+              <h1 className="text-lg font-semibold">New Chat</h1>
+            )}
           </div>
+          {hasMessages && chatModel ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">
+                Model:{" "}
+                <span className="font-normal text-muted-foreground">
+                  {chatModels.find((m) => m.id === chatModel)?.name ||
+                    chatModel}
+                </span>
+              </span>
+            </div>
+          ) : !hasMessages ? (
+            <ModelSelector
+              selectedModel={selectedModel}
+              onModelChange={handleModelChange}
+              disabled={isLoading}
+            />
+          ) : null}
         </div>
 
         {/* Chat Component */}
         <div className="flex-1 overflow-hidden">
           <Chat
+            key={initialChatId || "new-chat"}
             initialChatId={initialChatId}
             initialMessages={initialMessages}
+            selectedModel={selectedModel}
+            onFirstMessage={() => setHasMessages(true)}
           />
         </div>
       </div>
@@ -56,7 +123,7 @@ export function ChatLayout({ initialChatId, initialMessages = [], userId }: Chat
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => handleSidebarToggle(false)}
         />
       )}
     </div>

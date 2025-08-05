@@ -2,25 +2,47 @@
 
 import { DefaultChatTransport } from "ai";
 import { useChat } from "@ai-sdk/react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { nanoid } from "nanoid";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ModelSelector } from "./model-selector";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { Send, Square } from "lucide-react";
 
 interface ChatProps {
   initialChatId?: string;
   initialMessages?: any[];
+  selectedModel?: string;
+  onModelChange?: (modelId: string) => void;
+  onFirstMessage?: () => void;
 }
 
-export function Chat({ initialChatId, initialMessages = [] }: ChatProps) {
-  const [chatId] = useState(initialChatId || nanoid());
-  const [selectedModel, setSelectedModel] = useState(DEFAULT_CHAT_MODEL);
+export function Chat({
+  initialChatId,
+  initialMessages = [],
+  selectedModel = DEFAULT_CHAT_MODEL,
+  onFirstMessage,
+}: ChatProps) {
+  const [chatId, setChatId] = useState(initialChatId || nanoid());
   const [input, setInput] = useState("");
+  const selectedModelRef = useRef(selectedModel);
+  const [messageCount, setMessageCount] = useState(initialMessages.length);
+  
+  useEffect(() => {
+    selectedModelRef.current = selectedModel;
+  }, [selectedModel]);
+
+  // Reset chat when initialChatId changes or becomes undefined (new chat)
+  useEffect(() => {
+    if (initialChatId) {
+      setChatId(initialChatId);
+    } else {
+      setChatId(nanoid());
+    }
+  }, [initialChatId]);
 
   const { messages, sendMessage, status, stop } = useChat({
     id: chatId,
@@ -32,7 +54,8 @@ export function Chat({ initialChatId, initialMessages = [] }: ChatProps) {
           body: {
             id,
             message: messages.at(-1),
-            selectedChatModel: selectedModel,
+            messages: messages,
+            selectedChatModel: selectedModelRef.current,
             selectedVisibilityType: "private",
             ...body,
           },
@@ -54,6 +77,12 @@ export function Chat({ initialChatId, initialMessages = [] }: ChatProps) {
       parts: [{ type: "text" as const, text: input.trim() }],
     };
 
+    // If this is the first message in a new chat, notify parent
+    if (messageCount === 0 && onFirstMessage) {
+      onFirstMessage();
+    }
+    
+    setMessageCount(prev => prev + 1);
     sendMessage(userMessage);
     setInput("");
   };
@@ -67,15 +96,6 @@ export function Chat({ initialChatId, initialMessages = [] }: ChatProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header with model selector */}
-      <div className="flex items-center justify-end p-4 border-b">
-        <ModelSelector
-          selectedModel={selectedModel}
-          onModelChange={setSelectedModel}
-          disabled={isLoading}
-        />
-      </div>
-
       {/* Messages area */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
@@ -97,10 +117,43 @@ export function Chat({ initialChatId, initialMessages = [] }: ChatProps) {
                   <div className="text-xs opacity-70 capitalize">
                     {message.role}
                   </div>
-                  <div className="whitespace-pre-wrap">
-                    {message.parts
-                      ? message.parts.map((part: any) => part.text).join("")
-                      : message.content || ""}
+                  <div>
+                    {message.role === "assistant" ? (
+                      <ReactMarkdown 
+                        className="prose prose-sm max-w-none dark:prose-invert"
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          code: ({ children, className }) => {
+                            const isInline = !className;
+                            return isInline ? (
+                              <code className="bg-muted px-1 py-0.5 rounded text-sm">{children}</code>
+                            ) : (
+                              <code className="block bg-muted p-2 rounded text-sm overflow-x-auto">{children}</code>
+                            );
+                          },
+                          pre: ({ children }) => <div className="bg-muted p-2 rounded overflow-x-auto">{children}</div>,
+                        }}
+                      >
+                        {message.parts
+                          ? message.parts.map((part: any) => {
+                              switch (part.type) {
+                                case 'text':
+                                  return part.text;
+                                case 'reasoning':
+                                  return `*${part.reasoning}*`;
+                                default:
+                                  return part.text || '';
+                              }
+                            }).join('')
+                          : message.content || ""}
+                      </ReactMarkdown>
+                    ) : (
+                      <div className="whitespace-pre-wrap">
+                        {message.parts
+                          ? message.parts.map((part: any) => part.text).join("")
+                          : message.content || ""}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>

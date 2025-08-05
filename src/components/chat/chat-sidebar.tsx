@@ -23,12 +23,12 @@ export function ChatSidebar({ isOpen, onClose, userId }: ChatSidebarProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-80 bg-background border-r shadow-lg md:relative md:inset-y-auto md:shadow-none">
+    <div className="fixed inset-y-0 left-0 z-50 w-80 bg-background border-r shadow-lg md:relative md:inset-y-auto md:shadow-none md:h-full">
       <div className="flex h-full flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center gap-3">
-            <h2 className="font-semibold">Chats</h2>
+        <div className="flex items-center justify-between h-12 p-4 border-b">
+          <div className="flex items-center justify-between w-full">
+            <h2 className="font-semibold">History</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -49,8 +49,8 @@ export function ChatSidebar({ isOpen, onClose, userId }: ChatSidebarProps) {
         </div>
 
         {/* Chat History */}
-        <ScrollArea className="flex-1">
-          <div className="p-2">
+        <ScrollArea className="flex-1 h-0">
+          <div className="p-2 min-h-full">
             <SidebarHistory userId={userId} />
           </div>
         </ScrollArea>

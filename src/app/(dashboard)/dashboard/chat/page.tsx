@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ChatLayout } from "@/components/chat/chat-layout";
 import { getSessionFromCookie } from "@/utils/auth";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Chat",
@@ -23,10 +24,22 @@ export const metadata: Metadata = {
 
 export default async function ChatPage() {
   const session = await getSessionFromCookie();
-  
+
   return (
-    <div className="h-full">
+    <>
+      <PageHeader
+        items={[
+          {
+            href: "/dashboard",
+            label: "Dashboard",
+          },
+          {
+            href: "/dashboard/chat",
+            label: "Chat",
+          },
+        ]}
+      />
       <ChatLayout userId={session?.user?.id} />
-    </div>
+    </>
   );
 }

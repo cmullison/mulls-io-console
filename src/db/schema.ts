@@ -289,6 +289,7 @@ export const chatTable = sqliteTable("chat", {
   title: text().notNull(),
   userId: text().notNull().references(() => userTable.id),
   visibility: text({ enum: ['public', 'private'] }).default('private').notNull(),
+  model: text(),
 }, (table) => ([
   index('chat_user_id_idx').on(table.userId),
   index('chat_visibility_idx').on(table.visibility),

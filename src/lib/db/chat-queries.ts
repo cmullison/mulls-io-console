@@ -10,11 +10,13 @@ import { createId } from '@paralleldrive/cuid2';
 export async function createChat({
   title,
   userId,
-  visibility = 'private'
+  visibility = 'private',
+  model,
 }: {
   title: string;
   userId: string;
   visibility?: 'public' | 'private';
+  model?: string;
 }): Promise<Chat> {
   const db = getDB();
   const [chat] = await db
@@ -24,6 +26,7 @@ export async function createChat({
       title,
       userId,
       visibility,
+      model,
     })
     .returning();
 

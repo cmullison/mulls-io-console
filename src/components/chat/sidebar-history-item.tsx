@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { MoreHorizontal, Trash2, Edit2 } from 'lucide-react';
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { MoreHorizontal, Trash2, Edit2 } from "lucide-react";
 import {
   SidebarMenuItem,
   SidebarMenuButton,
   useSidebar,
-} from '@/components/ui/sidebar';
+} from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,10 +24,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import type { Chat } from '@/db/schema';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import type { Chat } from "@/db/schema";
 
 interface ChatItemProps {
   chat: Chat;
@@ -37,30 +37,46 @@ interface ChatItemProps {
 
 export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
   const { setOpenMobile } = useSidebar();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const router = useRouter();
   const params = useParams();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(chat.title);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const isActive = params.id === chat.id;
 
+  // Select all text when entering edit mode
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/chat?id=${chat.id}`, {
-        method: 'DELETE',
+      setShowDeleteAlert(false);
+      
+      // If this is the active chat, navigate away IMMEDIATELY
+      if (isActive) {
+        window.location.href = "/dashboard/chat";
+      }
+
+      // Then make the delete request
+      const response = await fetch(`/api/chat/${chat.id}`, {
+        method: "DELETE",
       });
 
       if (response.ok) {
         onDelete?.(chat.id);
-        if (isActive) {
-          router.push('/dashboard/chat');
-        }
+      } else {
+        console.error("Failed to delete chat:", await response.text());
       }
     } catch (error) {
-      console.error('Failed to delete chat:', error);
+      console.error("Failed to delete chat:", error);
     }
-    setShowDeleteAlert(false);
   };
 
   const handleSaveEdit = async () => {
@@ -71,9 +87,9 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSaveEdit();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       setEditedTitle(chat.title);
       setIsEditing(false);
     }
@@ -90,6 +106,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
           <div className="flex items-center w-full">
             {isEditing ? (
               <Input
+                ref={inputRef}
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
                 onBlur={handleSaveEdit}
@@ -106,7 +123,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
                 <span className="truncate text-sm">{chat.title}</span>
               </Link>
             )}
-            <DropdownMenu>
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
@@ -120,6 +137,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault();
+                    setDropdownOpen(false);
                     setIsEditing(true);
                   }}
                 >
@@ -129,6 +147,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault();
+                    setDropdownOpen(false);
                     setShowDeleteAlert(true);
                   }}
                   className="text-destructive focus:text-destructive"
@@ -147,12 +166,16 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Chat</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this chat? This action cannot be undone.
+              Are you sure you want to delete this chat? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

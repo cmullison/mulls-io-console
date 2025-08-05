@@ -3,6 +3,7 @@ import { ChatLayout } from "@/components/chat/chat-layout";
 import { getSessionFromCookie } from "@/utils/auth";
 import { getChatById, getMessagesByChatId } from "@/lib/db/chat-queries";
 import { notFound, redirect } from "next/navigation";
+import { PageHeader } from "@/components/page-header";
 
 interface ChatPageProps {
   params: Promise<{
@@ -10,7 +11,9 @@ interface ChatPageProps {
   }>;
 }
 
-export async function generateMetadata({ params }: ChatPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ChatPageProps): Promise<Metadata> {
   const { id } = await params;
   const session = await getSessionFromCookie();
   if (!session?.user) {
@@ -35,7 +38,7 @@ export async function generateMetadata({ params }: ChatPageProps): Promise<Metad
 export default async function ChatPage({ params }: ChatPageProps) {
   const { id } = await params;
   const session = await getSessionFromCookie();
-  
+
   if (!session?.user) {
     redirect("/login");
   }
@@ -45,7 +48,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
 
   try {
     chat = await getChatById(id);
-    
+
     if (!chat) {
       notFound();
     }
@@ -56,27 +59,40 @@ export default async function ChatPage({ params }: ChatPageProps) {
 
     // Get messages for this chat
     const dbMessages = await getMessagesByChatId(id);
-    
+
     // Convert to UI format
-    messages = dbMessages.map(msg => ({
+    messages = dbMessages.map((msg) => ({
       id: msg.id,
       role: msg.role,
       parts: msg.parts as any,
       createdAt: msg.createdAt,
     }));
-
   } catch (error) {
     console.error("Error loading chat:", error);
     notFound();
   }
-  
+
   return (
-    <div className="h-full">
-      <ChatLayout 
+    <>
+      <PageHeader
+        items={[
+          {
+            href: "/dashboard",
+            label: "Dashboard",
+          },
+          {
+            href: "/dashboard/chat",
+            label: "Chat",
+          },
+        ]}
+      />
+      <ChatLayout
         initialChatId={id}
         initialMessages={messages}
-        userId={session.user.id} 
+        userId={session.user.id}
+        chatTitle={chat.title}
+        chatModel={chat.model}
       />
-    </div>
+    </>
   );
 }

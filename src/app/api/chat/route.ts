@@ -16,16 +16,47 @@ import { z } from 'zod';
 
 export const maxDuration = 60;
 
+// Define schema for all possible message part types from AI SDK
+const messagePartSchema = z.union([
+  z.object({
+    type: z.literal('text'),
+    text: z.string(),
+  }),
+  z.object({
+    type: z.literal('reasoning'),
+    reasoning: z.string(),
+  }),
+  z.object({
+    type: z.literal('step-start'),
+  }),
+  z.object({
+    type: z.literal('tool'),
+    tool: z.any(),
+  }),
+  z.object({
+    type: z.literal('file'),
+    url: z.string(),
+    mediaType: z.string(),
+  }),
+  // Catch-all for any other part types
+  z.object({
+    type: z.string(),
+  }).passthrough(),
+]);
+
 const requestSchema = z.object({
   id: z.string(),
   message: z.object({
     id: z.string(),
     role: z.literal('user'),
-    parts: z.array(z.object({
-      type: z.literal('text'),
-      text: z.string(),
-    })),
+    parts: z.array(messagePartSchema),
   }),
+  messages: z.array(z.object({
+    id: z.string(),
+    role: z.enum(['user', 'assistant', 'system']),
+    parts: z.array(messagePartSchema).optional(),
+    content: z.string().optional(),
+  })).optional(),
   selectedChatModel: z.string(),
   selectedVisibilityType: z.enum(['public', 'private']).default('private'),
 });
@@ -38,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, message, selectedChatModel, selectedVisibilityType } = requestSchema.parse(body);
+    const { id, message, messages, selectedChatModel, selectedVisibilityType } = requestSchema.parse(body);
 
     // Check rate limits (basic implementation)
     const messageCount = await getMessageCountByUserId({
@@ -53,30 +84,36 @@ export async function POST(request: NextRequest) {
     // Get or create chat
     let chat = await getChatById(id);
     if (!chat) {
+      // @ts-expect-error - message.parts is not typed correctly
       const userText = message.parts.map(part => part.text).join(' ');
       const title = await generateChatTitle(userText);
       chat = await createChat({
         title,
         userId: session.user.id,
         visibility: selectedVisibilityType,
+        model: selectedChatModel,
       });
     } else if (chat.userId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get existing messages from database
-    const messagesFromDb = await getMessagesByChatId(chat.id);
-
-    // Convert database messages to UI format
-    const existingUIMessages = messagesFromDb.map(msg => ({
-      id: msg.id,
-      role: msg.role,
-      parts: msg.parts as any,
-      createdAt: msg.createdAt,
-    }));
-
-    // Add the new user message to UI messages array
-    const uiMessages = [...existingUIMessages, message];
+    // Use messages from frontend if available, otherwise get from database
+    let uiMessages;
+    if (messages && messages.length > 0) {
+      // Use the full conversation history from frontend
+      uiMessages = messages;
+    } else {
+      // Fallback to database messages (for existing chats without frontend history)
+      const messagesFromDb = await getMessagesByChatId(chat.id);
+      const existingUIMessages = messagesFromDb.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        parts: msg.parts as any,
+        createdAt: msg.createdAt,
+      }));
+      // Add the new user message to UI messages array
+      uiMessages = [...existingUIMessages, message];
+    }
 
     // Save the user message to database
     await createMessage({

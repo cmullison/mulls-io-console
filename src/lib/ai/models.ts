@@ -21,11 +21,11 @@ export const chatModels: Array<ChatModel> = [
     description: 'Most capable model for complex tasks',
     provider: 'anthropic',
   },
-  
+
   // OpenAI models
   {
     id: 'o4-mini',
-    name: 'O4 Mini',
+    name: 'o4-mini',
     description: 'Fast and efficient reasoning model',
     provider: 'openai',
   },
@@ -36,12 +36,30 @@ export const chatModels: Array<ChatModel> = [
     provider: 'openai',
   },
   {
+    id: 'gpt-4o',
+    name: 'GPT-4o',
+    description: 'Advanced language model',
+    provider: 'openai',
+  },
+  {
+    id: 'gpt-oss-20b',
+    name: 'GPT-OSS-20B',
+    description: 'Medium-sized open weight model',
+    provider: 'openai',
+  },
+  {
+    id: 'gpt-oss-120b',
+    name: 'GPT-OSS-120B',
+    description: 'Large open weight model',
+    provider: 'openai',
+  },
+  {
     id: 'o3',
-    name: 'O3',
+    name: 'o3',
     description: 'Latest reasoning model',
     provider: 'openai',
   },
-  
+
   // Google models
   {
     id: 'gemini-2.5-pro',
