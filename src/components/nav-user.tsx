@@ -3,7 +3,7 @@
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,9 +106,6 @@ export function NavUser() {
                   <span className="truncate text-xs text-muted-foreground">
                     {user.email}
                   </span>
-                  <Badge variant="secondary" className="w-fit text-[10px]">
-                    {user.currentCredits} credits
-                  </Badge>
                 </div>
               </div>
             </DropdownMenuLabel>

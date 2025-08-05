@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { CloudflareEnv, getBucketBinding } from '@/lib/r2-bindings';
+import { getSessionFromCookie } from "@/utils/auth";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ bucket: string }> }
 ) {
+  // Check authentication
+  const session = await getSessionFromCookie();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { env } = getCloudflareContext();
     const typedEnv = env as unknown as CloudflareEnv;

@@ -15,7 +15,14 @@ import { useServerAction } from "zsa-react";
 import { toast } from "sonner";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { z } from "zod";
 import { useSessionStore } from "@/state/session";
 import { Captcha } from "@/components/captcha";
@@ -25,31 +32,42 @@ import { useConfigStore } from "@/state/config";
 type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordClientComponent() {
-  const { session } = useSessionStore()
-  const { isTurnstileEnabled } = useConfigStore()
+  const { session } = useSessionStore();
+  const { isTurnstileEnabled } = useConfigStore();
   const router = useRouter();
 
   const form = useForm<ForgotPasswordSchema>({
     resolver: zodResolver(forgotPasswordSchema),
-  });
-
-  const captchaToken = useWatch({ control: form.control, name: 'captchaToken' })
-
-  const { execute: sendResetLink, isSuccess } = useServerAction(forgotPasswordAction, {
-    onError: (error) => {
-      toast.dismiss();
-      toast.error(error.err?.message);
-    },
-    onStart: () => {
-      toast.loading("Sending reset instructions...");
-    },
-    onSuccess: () => {
-      toast.dismiss();
-      toast.success("Reset instructions sent");
+    defaultValues: {
+      email: session?.user?.email ?? "",
+      captchaToken: "",
     },
   });
+
+  const captchaToken = useWatch({
+    control: form.control,
+    name: "captchaToken",
+  });
+
+  const { execute: sendResetLink, isSuccess } = useServerAction(
+    forgotPasswordAction,
+    {
+      onError: (error) => {
+        toast.dismiss();
+        toast.error(error.err?.message);
+      },
+      onStart: () => {
+        toast.loading("Sending reset instructions...");
+      },
+      onSuccess: () => {
+        toast.dismiss();
+        toast.success("Reset instructions sent");
+      },
+    }
+  );
 
   const onSubmit = async (data: ForgotPasswordSchema) => {
+    console.log("Form data being submitted:", JSON.stringify(data, null, 2));
     sendResetLink(data);
   };
 
@@ -60,7 +78,8 @@ export default function ForgotPasswordClientComponent() {
           <CardHeader>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
-              If an account exists with that email, we&apos;ve sent you instructions to reset your password.
+              If an account exists with that email, we&apos;ve sent you
+              instructions to reset your password.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -85,7 +104,8 @@ export default function ForgotPasswordClientComponent() {
             {session ? "Change Password" : "Forgot Password"}
           </CardTitle>
           <CardDescription>
-            Enter your email address and we&apos;ll send you instructions to reset your password.
+            Enter your email address and we&apos;ll send you instructions to
+            reset your password.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -94,8 +114,6 @@ export default function ForgotPasswordClientComponent() {
               <FormField
                 control={form.control}
                 name="email"
-                disabled={Boolean(session?.user?.email)}
-                defaultValue={session?.user?.email || undefined}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium">Email</FormLabel>
@@ -104,6 +122,7 @@ export default function ForgotPasswordClientComponent() {
                         type="email"
                         className="w-full px-3 py-2"
                         placeholder="name@example.com"
+                        readOnly={Boolean(session?.user?.email)}
                         {...field}
                       />
                     </FormControl>
@@ -113,7 +132,7 @@ export default function ForgotPasswordClientComponent() {
               />
               <div className="flex flex-col justify-center items-center">
                 <Captcha
-                  onSuccess={(token) => form.setValue('captchaToken', token)}
+                  onSuccess={(token) => form.setValue("captchaToken", token)}
                   validationError={form.formState.errors.captchaToken?.message}
                 />
 
@@ -151,7 +170,6 @@ export default function ForgotPasswordClientComponent() {
           </Button>
         )}
       </div>
-
     </div>
   );
 }

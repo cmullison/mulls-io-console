@@ -92,7 +92,6 @@ To do:
 - ✅ AI Agents with Cloudflare Durable Objects (COMPLETED)
 - ✅ R2 file explorer integration (COMPLETED)
 - Add pagination to R2 file browser for large buckets (use R2's `maxKeys` parameter and implement next/previous navigation to improve performance on directories with many files)
-- Create a new dashboard page with modified versions of the agents and patterns in src/app/(dashboard)/dashboard/agents that are focused on creating landing page copy, design, prompts for images (for text-to-image gen), for all major sections of a landing page. start by outlining a plan for us to iterate and solidify before implementing.
 - Create a new dashboard page for text-to-image generation. this will be the only entry point to text-to-image generation, so it will need to be dynamic in that the model can be configured, and thus configurations for the user to choose from will also need to be dynamic. however, given that this is mainly intended to be for non-technical users, we may opt for doing the heavy lifting there on the users' behalf. let's discuss.
 - I also want a general prompt repository, so we'll have to incorporate d1 database somehow into that. I have a UI in mind for the prompt repo already, so remind me to grab that for you when we get to this step
-- I need to add analytics (I have this in another project but we'll need to add it to this), a chat UI (I also have this), and some workers queues to this project. we'll split this list item into a separate to-do given the complexity, and given that some will need to be refactored for our next backend
+- Repurpose settings page/subpages for notifications

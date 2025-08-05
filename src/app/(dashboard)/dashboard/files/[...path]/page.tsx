@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
 import PageBanner from "@/components/page-banner";
-import { R2FileBrowser } from "@/components/r2/r2-file-browser";
+import { R2FileBrowser } from "@/components/files/r2-file-browser";
 import { r2Config } from "@/lib/r2-config";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { CloudflareEnv, getBucketBinding } from '@/lib/r2-bindings';
+import { CloudflareEnv, getBucketBinding } from "@/lib/r2-bindings";
 
 interface R2PathPageProps {
   params: Promise<{
@@ -13,7 +13,10 @@ interface R2PathPageProps {
 }
 
 // Server-side data fetching for initial file list (SSR)
-async function getInitialFiles(path: string, bucketName: string = r2Config.defaultBucketName) {
+async function getInitialFiles(
+  path: string,
+  bucketName: string = r2Config.defaultBucketName
+) {
   try {
     // This runs on the server during SSR
     const { env } = getCloudflareContext();
@@ -21,7 +24,11 @@ async function getInitialFiles(path: string, bucketName: string = r2Config.defau
     const bucket = getBucketBinding(typedEnv, bucketName);
 
     if (!bucket) {
-      return { files: [], folders: [], error: `R2 bucket '${bucketName}' not found` };
+      return {
+        files: [],
+        folders: [],
+        error: `R2 bucket '${bucketName}' not found`,
+      };
     }
 
     const prefix = path ? path + (path.endsWith("/") ? "" : "/") : "";
@@ -61,10 +68,10 @@ export async function generateMetadata({
     : "Root";
 
   return {
-    title: `${folderName} - R2 Storage`,
+    title: `${folderName} - Files`,
     description: `Browse files in ${folderName} folder`,
     openGraph: {
-      title: `${folderName} - R2 Storage - Mulls.io Console`,
+      title: `${folderName} - Files - Mulls.io Console`,
       description: `Browse files in ${folderName} folder`,
     },
   };
@@ -82,7 +89,7 @@ export default async function R2PathPage({ params }: R2PathPageProps) {
 
   const breadcrumbItems = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/dashboard/r2", label: "R2 Storage" },
+    { href: "/dashboard/files", label: "Files" },
   ];
 
   // Add path segments to breadcrumb
@@ -90,7 +97,7 @@ export default async function R2PathPage({ params }: R2PathPageProps) {
     const pathSegments = path.split("/").filter(Boolean);
     pathSegments.forEach((segment, index) => {
       const href =
-        "/dashboard/r2/" + pathSegments.slice(0, index + 1).join("/");
+        "/dashboard/files/" + pathSegments.slice(0, index + 1).join("/");
       breadcrumbItems.push({ href, label: segment });
     });
   }
@@ -99,7 +106,7 @@ export default async function R2PathPage({ params }: R2PathPageProps) {
     <>
       <PageHeader items={breadcrumbItems} />
       <PageBanner
-        bannerTitle={`R2 Storage - ${folderName}`}
+        bannerTitle={`Files - ${folderName}`}
         bannerDescription={`Browse and manage files in ${
           folderName === "Root" ? "root directory" : folderName + " folder"
         }`}

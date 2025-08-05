@@ -112,8 +112,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: ChartBar,
       },
       {
-        title: "R2 Storage",
-        url: "/dashboard/r2" as Route,
+        title: "Files",
+        url: "/dashboard/files" as Route,
         icon: HardDrive,
       },
       {

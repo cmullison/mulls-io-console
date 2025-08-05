@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSessionStore } from "@/state/session";
 
 interface R2Object {
   key: string;
@@ -55,6 +56,7 @@ export function R2FileBrowser({
   initialData,
   initialBucket,
 }: R2FileBrowserProps) {
+  const { session } = useSessionStore();
   const [currentPath, setCurrentPath] = useState(initialPath);
   const [currentBucket, setCurrentBucket] = useState(
     initialBucket || r2Config.defaultBucketName
@@ -176,8 +178,17 @@ export function R2FileBrowser({
 
   const pathSegments = currentPath.split("/").filter(Boolean);
 
+  if (!session?.user) {
+    return null;
+  }
+
+  const { user } = session;
+  if (user.email !== "chris@mulls.io") {
+    return <div>You are not authorized to access this page</div>;
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="">
       {/* Bucket Selector & Breadcrumb Navigation */}
       <Card className="p-4 !border-none !bg-transparent !shadow-none">
         <div className="flex items-center justify-between gap-4">
@@ -226,7 +237,7 @@ export function R2FileBrowser({
       </Card>
 
       {/* Actions */}
-      <Card className="p-4">
+      <Card className="p-4 mb-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {currentPath && (
@@ -270,7 +281,7 @@ export function R2FileBrowser({
       </Card>
 
       {/* File List */}
-      <Card className="p-4">
+      <Card className="p-4 mb-4">
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />

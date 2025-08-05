@@ -21,6 +21,7 @@ const createId = init({
 export const forgotPasswordAction = createServerAction()
   .input(forgotPasswordSchema)
   .handler(async ({ input }) => {
+    console.log("Forgot password input received:", JSON.stringify(input, null, 2));
     return withRateLimit(
       async () => {
         if (await isTurnstileEnabled() && input.captchaToken) {
