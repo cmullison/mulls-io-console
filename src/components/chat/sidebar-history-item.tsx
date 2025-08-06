@@ -58,7 +58,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
   const handleDelete = async () => {
     try {
       setShowDeleteAlert(false);
-      
+
       // If this is the active chat, navigate away IMMEDIATELY
       if (isActive) {
         window.location.href = "/dashboard/chat";
@@ -117,7 +117,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
             ) : (
               <Link
                 href={`/dashboard/chat/${chat.id}`}
-                className="flex items-center flex-1 min-w-0 mr-2"
+                className="flex items-center flex-1 min-w-0"
                 onClick={() => setOpenMobile(false)}
               >
                 <span className="truncate text-sm">{chat.title}</span>
@@ -128,12 +128,12 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 !mr-6"
                 >
                   <MoreHorizontal className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="start" side="right" className="w-48">
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault();

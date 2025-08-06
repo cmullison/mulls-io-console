@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     
     if (!parsedBody.success) {
       // If schema validation fails, try to extract what we can
-      console.log('Schema validation failed, attempting flexible parsing:', parsedBody.error);
+      console.log('Schema validation failed, attempting flexible parsing');
       ({ id, message, messages, selectedChatModel = 'claude-sonnet-4-20250514', selectedVisibilityType = 'private' } = body as any);
       
       if (!id || !message) {
