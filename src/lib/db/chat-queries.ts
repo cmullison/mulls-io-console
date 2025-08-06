@@ -8,11 +8,13 @@ import { createId } from '@paralleldrive/cuid2';
 
 // Chat operations
 export async function createChat({
+  id,
   title,
   userId,
   visibility = 'private',
   model,
 }: {
+  id?: string;
   title: string;
   userId: string;
   visibility?: 'public' | 'private';
@@ -22,7 +24,7 @@ export async function createChat({
   const [chat] = await db
     .insert(chatTable)
     .values({
-      id: `chat_${createId()}`,
+      id: id || `chat_${createId()}`,
       title,
       userId,
       visibility,

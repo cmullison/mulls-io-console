@@ -232,4 +232,155 @@ The agents are essentially **configurable workflow engines** - you're just chang
 - Add pagination to R2 file browser for large buckets (use R2's `maxKeys` parameter and implement next/previous navigation to improve performance on directories with many files)
 - Create a new dashboard page for text-to-image generation. this will be the only entry point to text-to-image generation, so it will need to be dynamic in that the model can be configured, and thus configurations for the user to choose from will also need to be dynamic. however, given that this is mainly intended to be for non-technical users, we may opt for doing the heavy lifting there on the users' behalf. let's discuss.
 - I also want a general prompt repository, so we'll have to incorporate d1 database somehow into that. I have a UI in mind for the prompt repo already, so remind me to grab that for you when we get to this step
+<<<<<<< Updated upstream
 - Repurpose settings page/subpages for notifications
+=======
+- Repurpose settings page/subpages for notifications
+
+## Browsertools mcp quick start guide
+
+There are three components to run this MCP tool:
+
+Install our chrome extension from here: v1.2.0 BrowserToolsMCP Chrome Extension
+Install the MCP server from this command within your IDE: npx @agentdeskai/browser-tools-mcp@latest
+Open a new terminal and run this command: npx @agentdeskai/browser-tools-server@latest
+Different IDEs have different configs but this command is generally a good starting point; please reference your IDEs docs for the proper config setup
+IMPORTANT TIP - there are two servers you need to install. There's...
+
+browser-tools-server (local nodejs server that's a middleware for gathering logs) and
+browser-tools-mcp (MCP server that you install into your IDE that communicates w/ the extension + browser-tools-server)
+npx @agentdeskai/browser-tools-mcp@latest is what you put into your IDE npx @agentdeskai/browser-tools-server@latest is what you run in a new terminal window
+
+After those three steps, open up your chrome dev tools and then the BrowserToolsMCP panel.
+
+If you're still having issues try these steps:
+
+Quit / close down your browser. Not just the window but all of Chrome itself.
+Restart the local node server (browser-tools-server)
+Make sure you only have ONE instance of chrome dev tools panel open
+After that, it should work but if it doesn't let me know and I can share some more steps to gather logs/info about the issue!
+
+## Chat Implementation - File Attachments Analysis
+
+### Current State (BROKEN)
+
+**Problem**: File attachments are not working in the chat system. User can select files via UI but they are not processed by the AI model.
+
+**Root Cause Analysis**:
+1. Frontend sends message with `parts` array containing file objects
+2. Backend receives message but doesn't properly extract and process the `parts` 
+3. Database saves only text parts, file parts are lost
+4. AI model never receives file/image data
+
+### Current Implementation Issues
+
+**Frontend (chat.tsx)**:
+- ✅ File selection UI works correctly
+- ✅ Creates `parts` array with text + file parts using `URL.createObjectURL()`
+- ✅ Sends message via `sendMessage()` with proper structure
+- ❌ Uses deprecated `experimental_attachments` patterns mixed with new `parts` format
+
+**Backend (api/chat/route.ts)**:
+- ❌ Message processing ignores `parts` array from frontend
+- ❌ Hardcodes text-only parts when saving to database 
+- ❌ AI model transformation logic checks for wrong properties
+- ❌ No handling of blob URLs or file data conversion
+
+**Database Storage**:
+- ❌ File parts are not persisted - only text parts saved
+- ❌ Message retrieval doesn't include file metadata
+- ❌ Chat history loses attachment context
+
+### Required Fix (SYSTEMATIC APPROACH)
+
+**Step 1: Backend Message Processing**
+- Extract `parts` array from incoming message (not just `content`)
+- Validate and process file parts alongside text parts
+- Handle blob URLs created by `URL.createObjectURL()`
+
+**Step 2: Database Schema Validation**
+- Verify `parts` column can store file metadata
+- Ensure file URLs and metadata are preserved
+- Test message retrieval includes all parts
+
+**Step 3: AI Model Integration**
+- Transform file parts into proper multi-modal format
+- Handle image files specifically (Claude supports vision)
+- Pass file content/URLs to AI model correctly
+
+**Step 4: Message Flow Validation**
+- Frontend → Backend: Verify `parts` array transmission
+- Backend → Database: Verify complete parts storage
+- Database → AI Model: Verify multi-modal message construction
+- AI Response: Verify model can access and process files
+
+### AI SDK Version Compatibility
+
+**Current Issue**: Mixing AI SDK v4 (`experimental_attachments`) and v5 (`parts`) patterns
+
+**AI SDK v5 Migration Requirements**:
+- Replace `experimental_attachments` with `parts` array
+- Handle `file` type parts with `mediaType` and `url` properties
+- Update message rendering to process `parts` instead of `experimental_attachments`
+
+**Correct v5 Pattern**:
+```javascript
+// Frontend message structure
+{
+  content: "text content",
+  parts: [
+    { type: "text", text: "text content" },
+    { type: "file", url: "blob:...", mediaType: "image/png" }
+  ]
+}
+
+// Backend processing
+const content = [];
+msg.parts.forEach(part => {
+  if (part.type === 'text') {
+    content.push({ type: "text", text: part.text });
+  } else if (part.type === 'file' && part.mediaType?.startsWith('image/')) {
+    content.push({ type: "image", image: part.url });
+  }
+});
+```
+
+### Testing Strategy
+
+**Before Any Code Changes**:
+1. Document current message flow from frontend to AI model
+2. Log message structure at each stage (frontend → API → database → AI)
+3. Identify exactly where file data is lost
+4. Test with simple text message to ensure basic chat still works
+
+**Implementation Order**:
+1. Fix backend message extraction (`message.parts` access)
+2. Fix database storage (save complete `parts` array)
+3. Fix AI model message transformation
+4. Test with single image file
+5. Test with multiple files
+6. Test edge cases (no files, mixed content)
+
+### Critical Success Criteria
+
+- [ ] File parts are saved to database with original structure
+- [ ] File URLs remain accessible to AI model
+- [ ] AI model receives properly formatted multi-modal content
+- [ ] Chat history preserves file attachments
+- [ ] No regressions in text-only chat functionality
+
+### Failed Approaches (DO NOT REPEAT)
+
+❌ **Overengineering**: Adding R2 upload complexity before basic functionality works
+❌ **Type Confusion**: Mixing AI SDK versions without clear migration
+❌ **Assumption-Based Fixes**: Making changes without understanding data flow
+❌ **Incomplete Testing**: Not verifying each step of the message pipeline
+
+### Next Steps (WHEN AUTHORIZED)
+
+1. **READ-ONLY ANALYSIS**: Log message structure at each processing stage
+2. **MINIMAL FIX**: Update backend to properly extract `message.parts`
+3. **VERIFICATION**: Confirm file data reaches AI model
+4. **INCREMENTAL**: Test one file type at a time
+5. **DOCUMENTATION**: Update this section with working implementation
+>>>>>>> Stashed changes

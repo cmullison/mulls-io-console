@@ -69,7 +69,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, message, messages, selectedChatModel, selectedVisibilityType } = requestSchema.parse(body);
+    
+    // For AI SDK v5, the structure may be different when files are involved
+    // Let's be more flexible with parsing
+    const parsedBody = requestSchema.safeParse(body);
+    
+    let id, message, messages, selectedChatModel, selectedVisibilityType;
+    
+    if (!parsedBody.success) {
+      // If schema validation fails, try to extract what we can
+      console.log('Schema validation failed, attempting flexible parsing:', parsedBody.error);
+      ({ id, message, messages, selectedChatModel = 'claude-sonnet-4-20250514', selectedVisibilityType = 'private' } = body as any);
+      
+      if (!id || !message) {
+        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      }
+    } else {
+      ({ id, message, messages, selectedChatModel, selectedVisibilityType } = parsedBody.data);
+    }
 
     // Check rate limits (basic implementation)
     const messageCount = await getMessageCountByUserId({
@@ -84,10 +101,10 @@ export async function POST(request: NextRequest) {
     // Get or create chat
     let chat = await getChatById(id);
     if (!chat) {
-      // @ts-expect-error - message.parts is not typed correctly
-      const userText = message.parts.map(part => part.text).join(' ');
+      const userText = (message.parts as any).filter((part: any) => part.type === 'text').map((part: any) => part.text).join(' ');
       const title = await generateChatTitle(userText);
       chat = await createChat({
+        id, // Use the chat ID from the frontend
         title,
         userId: session.user.id,
         visibility: selectedVisibilityType,

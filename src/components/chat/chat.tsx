@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text */
 "use client";
 
 import { DefaultChatTransport } from "ai";
@@ -10,7 +11,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
-import { Send, Square } from "lucide-react";
+import {
+  Send,
+  Square,
+  Paperclip,
+  X,
+  File,
+  Image,
+  FileText,
+} from "lucide-react";
 
 interface ChatProps {
   initialChatId?: string;
@@ -28,8 +37,10 @@ export function Chat({
 }: ChatProps) {
   const [chatId, setChatId] = useState(initialChatId || nanoid());
   const [input, setInput] = useState("");
+  const [files, setFiles] = useState<FileList | undefined>(undefined);
   const selectedModelRef = useRef(selectedModel);
   const [messageCount, setMessageCount] = useState(initialMessages.length);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     selectedModelRef.current = selectedModel;
@@ -62,6 +73,10 @@ export function Chat({
         };
       },
     }),
+    onFinish: () => {
+      // Chat should now maintain consistent ID throughout conversation
+      console.log('Chat finished with consistent ID:', chatId);
+    },
   });
 
   // @ts-expect-error - status is not typed
@@ -69,13 +84,7 @@ export function Chat({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = {
-      id: nanoid(),
-      role: "user" as const,
-      parts: [{ type: "text" as const, text: input.trim() }],
-    };
+    if ((!input.trim() && !files) || isLoading) return;
 
     // If this is the first message in a new chat, notify parent
     if (messageCount === 0 && onFirstMessage) {
@@ -83,8 +92,18 @@ export function Chat({
     }
 
     setMessageCount((prev) => prev + 1);
-    sendMessage(userMessage);
+
+    // Use proper AI SDK v5 pattern for files
+    sendMessage({
+      text: input.trim(),
+      files: files || undefined,
+    });
+
     setInput("");
+    setFiles(undefined);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -162,9 +181,40 @@ export function Chat({
                       </ReactMarkdown>
                     ) : (
                       <div className="whitespace-pre-wrap">
-                        {message.parts
-                          ? message.parts.map((part: any) => part.text).join("")
-                          : message.content || ""}
+                        {message.parts ? (
+                          <div className="space-y-2">
+                            {message.parts.map((part: any, index: number) => {
+                              if (part.type === "text") {
+                                return <div key={index}>{part.text}</div>;
+                              }
+                              if (part.type === "file") {
+                                if (part.mediaType?.startsWith("image/")) {
+                                  return (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      key={index}
+                                      src={part.url}
+                                      alt={part.filename || "Uploaded image"}
+                                      className="max-w-sm rounded-lg"
+                                    />
+                                  );
+                                }
+                                return (
+                                  <div
+                                    key={index}
+                                    className="flex items-center space-x-2 text-sm text-muted-foreground"
+                                  >
+                                    <File className="h-4 w-4" />
+                                    <span>{part.filename}</span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+                        ) : (
+                          message.content || ""
+                        )}
                       </div>
                     )}
                   </div>
@@ -190,6 +240,57 @@ export function Chat({
 
       {/* Input area */}
       <div className="p-4 border-t">
+        {/* File input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          accept="image/*,text/*,.pdf"
+          onChange={(e) => setFiles(e.target.files || undefined)}
+        />
+
+        {/* File preview */}
+        {files && files.length > 0 && (
+          <div className="mb-4 p-3 bg-muted rounded-lg">
+            <div className="flex flex-wrap gap-2">
+              {Array.from(files).map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center space-x-2 bg-background rounded px-2 py-1 border"
+                >
+                  {file.type.startsWith("image/") ? (
+                    <Image className="h-4 w-4" />
+                  ) : file.type === "application/pdf" ? (
+                    <FileText className="h-4 w-4" />
+                  ) : (
+                    <File className="h-4 w-4" />
+                  )}
+                  <span className="text-sm truncate max-w-32">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newFiles = Array.from(files).filter(
+                        (_, i) => i !== index,
+                      );
+                      const dataTransfer = new DataTransfer();
+                      newFiles.forEach((f) => dataTransfer.items.add(f));
+                      setFiles(
+                        dataTransfer.files.length > 0
+                          ? dataTransfer.files
+                          : undefined,
+                      );
+                    }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex space-x-2">
             <Textarea
@@ -202,8 +303,17 @@ export function Chat({
             />
             <div className="flex flex-col space-y-2">
               <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                className="shrink-0"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+              <Button
                 type="submit"
-                disabled={!input.trim() || isLoading}
+                disabled={(!input.trim() && !files) || isLoading}
                 size="icon"
               >
                 <Send className="h-4 w-4" />
