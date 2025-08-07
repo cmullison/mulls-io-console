@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { MoreHorizontal, Trash2, Edit2 } from "lucide-react";
 import {
   SidebarMenuItem,
@@ -26,7 +26,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import type { Chat } from "@/db/schema";
 
 interface ChatItemProps {
@@ -37,57 +36,65 @@ interface ChatItemProps {
 
 export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
   const { setOpenMobile } = useSidebar();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const router = useRouter();
   const params = useParams();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(chat.title);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isActive = params.id === chat.id;
 
-  // Select all text when entering edit mode
+  // Focus input when editing starts
   useEffect(() => {
     if (isEditing && inputRef.current) {
+      inputRef.current.focus();
       inputRef.current.select();
     }
   }, [isEditing]);
 
   const handleDelete = async () => {
+    setShowDeleteAlert(false);
+    
+    // Immediately call onDelete for optimistic update
+    onDelete?.(chat.id);
+
+    // If this is the active chat, navigate away
+    if (isActive) {
+      window.location.href = "/dashboard/chat";
+    }
+
+    // Then make the delete request in background
     try {
-      setShowDeleteAlert(false);
-
-      // If this is the active chat, navigate away IMMEDIATELY
-      if (isActive) {
-        window.location.href = "/dashboard/chat";
-      }
-
-      // Then make the delete request
       const response = await fetch(`/api/chat/${chat.id}`, {
         method: "DELETE",
       });
 
-      if (response.ok) {
-        onDelete?.(chat.id);
-      } else {
+      if (!response.ok) {
         console.error("Failed to delete chat:", await response.text());
+        // Refresh to revert if delete failed
+        if ((window as any).refreshChatSidebar) {
+          (window as any).refreshChatSidebar();
+        }
       }
     } catch (error) {
       console.error("Failed to delete chat:", error);
+      // Refresh to revert if delete failed
+      if ((window as any).refreshChatSidebar) {
+        (window as any).refreshChatSidebar();
+      }
     }
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = () => {
     if (editedTitle.trim() && editedTitle !== chat.title) {
       onUpdate?.(chat.id, editedTitle.trim());
     }
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
+      e.preventDefault();
       handleSaveEdit();
     } else if (e.key === "Escape") {
       setEditedTitle(chat.title);
@@ -95,70 +102,63 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
     }
   };
 
+  if (isEditing) {
+    return (
+      <SidebarMenuItem>
+        <div className="flex items-center gap-1 px-2 py-1.5">
+          <input
+            ref={inputRef}
+            type="text"
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleSaveEdit}
+            className="flex-1 bg-transparent outline-none text-sm"
+            placeholder="Chat title..."
+          />
+        </div>
+      </SidebarMenuItem>
+    );
+  }
+
   return (
     <>
       <SidebarMenuItem>
-        <SidebarMenuButton
-          asChild
-          isActive={isActive}
-          className="group data-[active=true]:bg-accent/50"
-        >
-          <div className="flex items-center w-full pr-2">
-            {isEditing ? (
-              <Input
-                ref={inputRef}
-                value={editedTitle}
-                onChange={(e) => setEditedTitle(e.target.value)}
-                onBlur={handleSaveEdit}
-                onKeyDown={handleKeyDown}
-                className="h-7 text-sm border-0 bg-transparent focus-visible:ring-1 flex-1 mr-2"
-                autoFocus
-              />
-            ) : (
-              <Link
-                href={`/dashboard/chat/${chat.id}`}
-                className="flex items-center flex-1 min-w-0"
-                onClick={() => setOpenMobile(false)}
+        <div className="group flex items-center gap-1">
+          <SidebarMenuButton asChild isActive={isActive} className="flex-1">
+            <Link
+              href={`/dashboard/chat/${chat.id}`}
+              onClick={() => setOpenMobile(false)}
+            >
+              <span className="truncate">{chat.title}</span>
+            </Link>
+          </SidebarMenuButton>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <span className="truncate text-sm">{chat.title}</span>
-              </Link>
-            )}
-            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 !mr-6"
-                >
-                  <MoreHorizontal className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="right" className="w-48">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setDropdownOpen(false);
-                    setIsEditing(true);
-                  }}
-                >
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Rename
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setDropdownOpen(false);
-                    setShowDeleteAlert(true);
-                  }}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </SidebarMenuButton>
+                <MoreHorizontal className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="right">
+              <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                <Edit2 className="h-4 w-4 mr-2" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setShowDeleteAlert(true)}
+                className="text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </SidebarMenuItem>
 
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>

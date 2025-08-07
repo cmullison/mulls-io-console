@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import { useRouter } from "next/navigation";
 import {
   Send,
   Square,
@@ -35,6 +36,7 @@ export function Chat({
   selectedModel = DEFAULT_CHAT_MODEL,
   onFirstMessage,
 }: ChatProps) {
+  const router = useRouter();
   const [chatId, setChatId] = useState(initialChatId || nanoid());
   const [input, setInput] = useState("");
   const [files, setFiles] = useState<FileList | undefined>(undefined);
@@ -46,16 +48,17 @@ export function Chat({
     selectedModelRef.current = selectedModel;
   }, [selectedModel]);
 
-  // Reset chat when initialChatId changes or becomes undefined (new chat)
+  // Set chat ID when initialChatId changes
   useEffect(() => {
     if (initialChatId) {
       setChatId(initialChatId);
-    } else {
+    } else if (!chatId) {
+      // Only generate new ID if we don't have one
       setChatId(nanoid());
     }
-  }, [initialChatId]);
+  }, [initialChatId, chatId]);
 
-  const { messages, sendMessage, status, stop } = useChat({
+  const { messages, sendMessage, status, stop, error } = useChat({
     id: chatId,
     messages: initialMessages,
     transport: new DefaultChatTransport({
@@ -74,8 +77,18 @@ export function Chat({
       },
     }),
     onFinish: () => {
-      // Chat should now maintain consistent ID throughout conversation
-      console.log('Chat finished with consistent ID:', chatId);
+      // Refresh sidebar after message completes (for new chats to appear)
+      if ((window as any).refreshChatSidebar) {
+        (window as any).refreshChatSidebar();
+      }
+
+      // If this was the first message, navigate to the chat with ID
+      if (!initialChatId && chatId) {
+        router.replace(`/dashboard/chat/${chatId}`);
+      }
+    },
+    onError: (error) => {
+      console.error("Chat error:", error);
     },
   });
 
@@ -235,6 +248,15 @@ export function Chat({
               </div>
             </Card>
           )}
+
+          {error && (
+            <Card className="mr-8 bg-destructive/10 border-destructive p-4">
+              <div className="text-sm text-destructive">
+                Error:{" "}
+                {error.message || "Failed to send message. Please try again."}
+              </div>
+            </Card>
+          )}
         </div>
       </ScrollArea>
 
@@ -247,7 +269,36 @@ export function Chat({
           multiple
           className="hidden"
           accept="image/*,text/*,.pdf"
-          onChange={(e) => setFiles(e.target.files || undefined)}
+          onChange={(e) => {
+            const selectedFiles = e.target.files;
+            if (selectedFiles && selectedFiles.length > 0) {
+              // Validate file sizes (max 10MB per file)
+              const maxSize = 10 * 1024 * 1024; // 10MB
+              const validFiles = Array.from(selectedFiles).filter((file) => {
+                if (file.size > maxSize) {
+                  console.warn(
+                    `File ${file.name} is too large (${(
+                      file.size /
+                      1024 /
+                      1024
+                    ).toFixed(2)}MB). Max size is 10MB.`
+                  );
+                  return false;
+                }
+                return true;
+              });
+
+              if (validFiles.length > 0) {
+                const dataTransfer = new DataTransfer();
+                validFiles.forEach((file) => dataTransfer.items.add(file));
+                setFiles(dataTransfer.files);
+              } else {
+                setFiles(undefined);
+              }
+            } else {
+              setFiles(undefined);
+            }
+          }}
         />
 
         {/* File preview */}
@@ -271,14 +322,14 @@ export function Chat({
                     type="button"
                     onClick={() => {
                       const newFiles = Array.from(files).filter(
-                        (_, i) => i !== index,
+                        (_, i) => i !== index
                       );
                       const dataTransfer = new DataTransfer();
                       newFiles.forEach((f) => dataTransfer.items.add(f));
                       setFiles(
                         dataTransfer.files.length > 0
                           ? dataTransfer.files
-                          : undefined,
+                          : undefined
                       );
                     }}
                     className="text-muted-foreground hover:text-foreground"

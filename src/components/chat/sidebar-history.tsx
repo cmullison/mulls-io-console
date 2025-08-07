@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { isToday, isYesterday, subWeeks, subMonths } from "date-fns";
 import useSWR from "swr";
 import {
@@ -80,29 +80,48 @@ export function SidebarHistory({ userId }: SidebarHistoryProps) {
     userId ? "/api/chat/history?limit=50" : null,
     userId ? fetcher : null,
     {
-      refreshInterval: 30000, // Refresh every 30 seconds
+      refreshInterval: 10000, // Refresh every 10 seconds for auto-renaming
+      revalidateOnFocus: true, // Refresh when tab becomes active
+      revalidateOnReconnect: true, // Refresh when network reconnects
+      dedupingInterval: 2000, // Prevent duplicate requests within 2 seconds
     }
   );
 
+  // Expose mutate function for external updates
+  useEffect(() => {
+    // Store mutate function globally for other components to trigger refresh
+    (window as any).refreshChatSidebar = () => mutate();
+    
+    return () => {
+      delete (window as any).refreshChatSidebar;
+    };
+  }, [mutate]);
+
   const handleDelete = async (chatId: string) => {
     if (data) {
-      // Optimistically update the UI
-      mutate(
-        {
-          ...data,
-          chats: data.chats.filter((chat) => chat.id !== chatId),
-        },
-        false
-      );
+      // Optimistically remove the chat from UI immediately
+      const optimisticData = {
+        ...data,
+        chats: data.chats.filter((chat) => chat.id !== chatId),
+      };
       
-      // Revalidate the data from server to ensure consistency
-      setTimeout(() => {
-        mutate();
-      }, 100);
+      // Update cache immediately with optimistic data
+      mutate(optimisticData, false);
     }
   };
 
   const handleUpdate = async (chatId: string, title: string) => {
+    // Optimistically update the title in the UI
+    if (data) {
+      const optimisticData = {
+        ...data,
+        chats: data.chats.map((chat) =>
+          chat.id === chatId ? { ...chat, title } : chat
+        ),
+      };
+      mutate(optimisticData, false);
+    }
+
     try {
       const response = await fetch(`/api/chat/${chatId}`, {
         method: "PATCH",
@@ -113,10 +132,16 @@ export function SidebarHistory({ userId }: SidebarHistoryProps) {
       });
 
       if (response.ok) {
-        mutate(); // Refresh the data
+        // Revalidate to ensure consistency
+        mutate();
+      } else {
+        // Revert on error
+        mutate();
       }
     } catch (error) {
       console.error("Failed to update chat title:", error);
+      // Revert on error
+      mutate();
     }
   };
 

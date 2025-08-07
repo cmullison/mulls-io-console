@@ -57,17 +57,15 @@ export function ChatLayout({
   return (
     <div className="flex h-full w-full">
       {/* Chat Sidebar */}
-      <div
-        className={`${
-          sidebarOpen ? "block" : "hidden"
-        } md:block transition-all duration-200 h-full`}
-      >
-        <ChatSidebar
-          isOpen={sidebarOpen}
-          onClose={() => handleSidebarToggle(false)}
-          userId={userId}
-        />
-      </div>
+      {sidebarOpen && (
+        <div className="w-80 h-full">
+          <ChatSidebar
+            isOpen={sidebarOpen}
+            onClose={() => handleSidebarToggle(false)}
+            userId={userId}
+          />
+        </div>
+      )}
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">

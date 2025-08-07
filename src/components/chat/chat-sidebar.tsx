@@ -4,7 +4,7 @@ import { X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarHistory } from "./sidebar-history";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -14,10 +14,18 @@ interface ChatSidebarProps {
 
 export function ChatSidebar({ isOpen, onClose, userId }: ChatSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleNewChat = () => {
+    // Always push to chat page - the Chat component will handle resetting when initialChatId is undefined
     router.push("/dashboard/chat");
-    router.refresh();
+
+    // If we're already on the chat page, also trigger a refresh to ensure clean state
+    if (pathname === "/dashboard/chat") {
+      setTimeout(() => {
+        router.refresh();
+      }, 0);
+    }
   };
 
   if (!isOpen) return null;
