@@ -9,18 +9,22 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { useRouter } from "next/navigation";
 import {
   Send,
   Square,
-  Paperclip,
+  Mic,
   X,
   File,
   Image,
   FileText,
+  Wand,
+  Globe,
+  Plus,
+  Wrench,
 } from "lucide-react";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface ChatProps {
   initialChatId?: string;
@@ -260,51 +264,12 @@ export function Chat({
         </div>
       </ScrollArea>
 
-      {/* Input area */}
-      <div className="p-4 border-t">
-        {/* File input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          accept="image/*,text/*,.pdf"
-          onChange={(e) => {
-            const selectedFiles = e.target.files;
-            if (selectedFiles && selectedFiles.length > 0) {
-              // Validate file sizes (max 10MB per file)
-              const maxSize = 10 * 1024 * 1024; // 10MB
-              const validFiles = Array.from(selectedFiles).filter((file) => {
-                if (file.size > maxSize) {
-                  console.warn(
-                    `File ${file.name} is too large (${(
-                      file.size /
-                      1024 /
-                      1024
-                    ).toFixed(2)}MB). Max size is 10MB.`
-                  );
-                  return false;
-                }
-                return true;
-              });
-
-              if (validFiles.length > 0) {
-                const dataTransfer = new DataTransfer();
-                validFiles.forEach((file) => dataTransfer.items.add(file));
-                setFiles(dataTransfer.files);
-              } else {
-                setFiles(undefined);
-              }
-            } else {
-              setFiles(undefined);
-            }
-          }}
-        />
-
-        {/* File preview */}
-        {files && files.length > 0 && (
-          <div className="mb-4 p-3 bg-muted rounded-lg">
-            <div className="flex flex-wrap gap-2">
+      {/* Input area - Simple sticky */}
+      <div className="sticky bottom-0 z-20 bg-background border-t">
+        <div className="p-4">
+          {/* File preview */}
+          {files && files.length > 0 && (
+            <div className="flex pb-2 !-mt-2 flex-wrap gap-2">
               {Array.from(files).map((file, index) => (
                 <div
                   key={index}
@@ -339,52 +304,142 @@ export function Chat({
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+          <div className="w-full p-2 border-1 border-border/50 rounded-lg">
+            {/* File input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              accept="image/*,text/*,.pdf"
+              onChange={(e) => {
+                const selectedFiles = e.target.files;
+                if (selectedFiles && selectedFiles.length > 0) {
+                  // Validate file sizes (max 10MB per file)
+                  const maxSize = 10 * 1024 * 1024; // 10MB
+                  const validFiles = Array.from(selectedFiles).filter(
+                    (file) => {
+                      if (file.size > maxSize) {
+                        console.warn(
+                          `File ${file.name} is too large (${(
+                            file.size /
+                            1024 /
+                            1024
+                          ).toFixed(2)}MB). Max size is 10MB.`
+                        );
+                        return false;
+                      }
+                      return true;
+                    }
+                  );
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex space-x-2">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message here..."
-              className="flex-1 min-h-[60px] max-h-[200px] resize-none"
-              disabled={isLoading}
+                  if (validFiles.length > 0) {
+                    const dataTransfer = new DataTransfer();
+                    validFiles.forEach((file) => dataTransfer.items.add(file));
+                    setFiles(dataTransfer.files);
+                  } else {
+                    setFiles(undefined);
+                  }
+                } else {
+                  setFiles(undefined);
+                }
+              }}
             />
-            <div className="flex flex-col space-y-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                className="shrink-0"
-              >
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button
-                type="submit"
-                disabled={(!input.trim() && !files) || isLoading}
-                size="icon"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-              {isLoading && (
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {/* Textarea and send/mic buttons */}
+              <div className="flex space-x-2">
+                <Textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your message here..."
+                  className="flex-1 min-h-[32px] max-h-[200px] resize-none !ring-0 !border-0 !shadow-none"
+                  disabled={isLoading}
+                />
+                <div className="flex flex-col space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      console.log("Microphone clicked");
+                    }}
+                    className="shrink-0"
+                  >
+                    <Mic className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={(!input.trim() && !files) || isLoading}
+                    size="icon"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                  {isLoading && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={stop}
+                    >
+                      <Square className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {/* Bottom row of buttons */}
+              <div className="flex justify-start space-x-2 w-full">
                 <Button
                   type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={stop}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    console.log("Globe clicked");
+                  }}
+                  className="h-7 px-2"
                 >
-                  <Square className="h-4 w-4" />
+                  <Globe className="h-3 w-3" />
                 </Button>
-              )}
-            </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-7 px-2"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    console.log("Wrench clicked");
+                  }}
+                  className="h-7 px-2"
+                >
+                  <Wrench className="h-3 w-3" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    console.log("Wand clicked");
+                  }}
+                  className="h-7 px-2"
+                >
+                  <Wand className="h-3 w-3" />
+                </Button>
+                <div className="text-xs ml-auto flex items-center text-muted-foreground">
+                  Press Enter to send, Shift+Enter for new line
+                </div>
+              </div>
+            </form>
           </div>
-          <div className="text-xs text-muted-foreground">
-            Press Enter to send, Shift+Enter for new line
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

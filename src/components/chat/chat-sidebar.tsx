@@ -58,7 +58,7 @@ export function ChatSidebar({ isOpen, onClose, userId }: ChatSidebarProps) {
 
         {/* Chat History */}
         <ScrollArea className="flex-1 h-0">
-          <div className="p-2 min-h-full">
+          <div className="min-h-full">
             <SidebarHistory userId={userId} />
           </div>
         </ScrollArea>

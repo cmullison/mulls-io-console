@@ -323,6 +323,7 @@ export const teamRelations = relations(teamTable, ({ many }) => ({
   memberships: many(teamMembershipTable),
   invitations: many(teamInvitationTable),
   roles: many(teamRoleTable),
+  landingPages: many(landingPageTable),
 }));
 
 export const teamRoleRelations = relations(teamRoleTable, ({ one }) => ({
@@ -383,6 +384,8 @@ export const userRelations = relations(userTable, ({ many }) => ({
   teamMemberships: many(teamMembershipTable),
   chats: many(chatTable),
   votes: many(voteTable),
+  landingPages: many(landingPageTable),
+  landingPageVersions: many(landingPageVersionTable),
 }));
 
 export const chatRelations = relations(chatTable, ({ one, many }) => ({
@@ -435,3 +438,64 @@ export type TeamInvitation = InferSelectModel<typeof teamInvitationTable>;
 export type Chat = InferSelectModel<typeof chatTable>;
 export type Message = InferSelectModel<typeof messageTable>;
 export type Vote = InferSelectModel<typeof voteTable>;
+
+// Landing page tables
+export const landingPageTable = sqliteTable("landing_pages", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `lp_${createId()}`).notNull(),
+  userId: text().notNull().references(() => userTable.id),
+  teamId: text().references(() => teamTable.id),
+  name: text({ length: 255 }).notNull(),
+  prd: text({ mode: 'json' }).notNull(),
+  sections: text({ mode: 'json' }).notNull(),
+  metadata: text({ mode: 'json' }),
+  version: integer().default(1).notNull(),
+  status: text({
+    enum: ['draft', 'published', 'archived']
+  }).default('draft').notNull(),
+}, (table) => ([
+  index('landing_page_user_id_idx').on(table.userId),
+  index('landing_page_team_id_idx').on(table.teamId),
+  index('landing_page_status_idx').on(table.status),
+]));
+
+export const landingPageVersionTable = sqliteTable("landing_page_versions", {
+  ...commonColumns,
+  id: text().primaryKey().$defaultFn(() => `lpv_${createId()}`).notNull(),
+  landingPageId: text().notNull().references(() => landingPageTable.id),
+  version: integer().notNull(),
+  sections: text({ mode: 'json' }).notNull(),
+  changedBy: text().notNull().references(() => userTable.id),
+  changeNote: text({ length: 1000 }),
+}, (table) => ([
+  index('landing_page_version_landing_page_id_idx').on(table.landingPageId),
+  index('landing_page_version_changed_by_idx').on(table.changedBy),
+  index('landing_page_version_unique_idx').on(table.landingPageId, table.version),
+]));
+
+// Landing page relations
+export const landingPageRelations = relations(landingPageTable, ({ one, many }) => ({
+  user: one(userTable, {
+    fields: [landingPageTable.userId],
+    references: [userTable.id],
+  }),
+  team: one(teamTable, {
+    fields: [landingPageTable.teamId],
+    references: [teamTable.id],
+  }),
+  versions: many(landingPageVersionTable),
+}));
+
+export const landingPageVersionRelations = relations(landingPageVersionTable, ({ one }) => ({
+  landingPage: one(landingPageTable, {
+    fields: [landingPageVersionTable.landingPageId],
+    references: [landingPageTable.id],
+  }),
+  changedByUser: one(userTable, {
+    fields: [landingPageVersionTable.changedBy],
+    references: [userTable.id],
+  }),
+}));
+
+export type LandingPage = InferSelectModel<typeof landingPageTable>;
+export type LandingPageVersion = InferSelectModel<typeof landingPageVersionTable>;

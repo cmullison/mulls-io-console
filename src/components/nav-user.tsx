@@ -37,15 +37,15 @@ export function NavUser() {
         <SidebarMenuItem>
           <SidebarMenuButton
             size="lg"
-            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-14"
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-14 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
           >
-            <Skeleton className="h-8 w-8 rounded-lg" />
-            <div className="grid flex-1 gap-0.5 text-left text-sm leading-tight">
+            <Skeleton className="h-8 w-8 rounded-lg group-data-[collapsible=icon]:mx-auto" />
+            <div className="grid flex-1 gap-0.5 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-3 w-32" />
               <Skeleton className="h-4 w-16" />
             </div>
-            <Skeleton className="h-4 w-4 ml-auto" />
+            <Skeleton className="h-4 w-4 ml-auto group-data-[collapsible=icon]:hidden" />
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
@@ -69,13 +69,15 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-14"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-14 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar ?? ""} alt={displayName ?? ""} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {displayName?.charAt(0)}
+                </AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 gap-0.5 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="font-semibold overflow-hidden text-ellipsis whitespace-nowrap">
                   {displayName}
                 </span>
@@ -83,7 +85,7 @@ export function NavUser() {
                   {user.email}
                 </span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -99,7 +101,9 @@ export function NavUser() {
                     src={user.avatar ?? ""}
                     alt={displayName ?? ""}
                   />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {displayName?.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 gap-0.5 text-left text-sm leading-tight">
                   <span className="font-semibold">{displayName}</span>

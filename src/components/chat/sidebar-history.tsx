@@ -91,7 +91,7 @@ export function SidebarHistory({ userId }: SidebarHistoryProps) {
   useEffect(() => {
     // Store mutate function globally for other components to trigger refresh
     (window as any).refreshChatSidebar = () => mutate();
-    
+
     return () => {
       delete (window as any).refreshChatSidebar;
     };
@@ -104,7 +104,7 @@ export function SidebarHistory({ userId }: SidebarHistoryProps) {
         ...data,
         chats: data.chats.filter((chat) => chat.id !== chatId),
       };
-      
+
       // Update cache immediately with optimistic data
       mutate(optimisticData, false);
     }
@@ -224,7 +224,7 @@ export function SidebarHistory({ userId }: SidebarHistoryProps) {
                   {group.label} ({group.chats.length})
                 </Button>
                 {!isCollapsed && (
-                  <SidebarMenu className="ml-2">
+                  <SidebarMenu className="">
                     {group.chats.map((chat) => (
                       <ChatItem
                         key={chat.id}

@@ -42,6 +42,19 @@
   .text-balance {
     text-wrap: balance;
   }
+
+                .container {
+                  min-height: 100vh;
+                  isolation: isolate;
+                } */
+        
+                /* .scroll-container>section {
+                  overflow-y: auto;
+                } */
+                .scroll-container {
+                  position: relative;
+                  will-change: transform;
+                }
 }
 
 /* ===== BASE STYLES ===== */
