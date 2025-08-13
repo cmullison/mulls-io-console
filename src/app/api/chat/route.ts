@@ -220,6 +220,7 @@ export async function POST(request: NextRequest) {
           model: aiProvider.languageModel(selectedChatModel),
           messages: processedMessages,
           system: 'You are a helpful AI assistant. Provide clear, accurate, and helpful responses.',
+          abortSignal: request.signal,
         });
 
         result.consumeStream();

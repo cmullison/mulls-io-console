@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import type { Chat } from "@/db/schema";
+import { cn } from "@/lib/utils";
 
 interface ChatItemProps {
   chat: Chat;
@@ -54,7 +55,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
 
   const handleDelete = async () => {
     setShowDeleteAlert(false);
-    
+
     // Immediately call onDelete for optimistic update
     onDelete?.(chat.id);
 
@@ -105,7 +106,7 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
   if (isEditing) {
     return (
       <SidebarMenuItem>
-        <div className="flex items-center gap-1 px-2 py-1.5">
+        <div className="flex items-center px-2 py-1.5">
           <input
             ref={inputRef}
             type="text"
@@ -133,13 +134,17 @@ export function ChatItem({ chat, onDelete, onUpdate }: ChatItemProps) {
               <span className="truncate">{chat.title}</span>
             </Link>
           </SidebarMenuButton>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Chat options"
+                className={cn(
+                  "h-6 w-6 p-0 opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity",
+                  isActive && "opacity-100"
+                )}
               >
                 <MoreHorizontal className="h-3 w-3" />
               </Button>

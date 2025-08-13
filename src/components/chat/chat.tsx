@@ -23,8 +23,14 @@ import {
   Globe,
   Plus,
   Wrench,
+  ThumbsUp,
+  ThumbsDown,
+  Copy as CopyIcon,
+  MoreVertical,
+  Brain,
 } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
+import { toast } from "sonner";
 
 interface ChatProps {
   initialChatId?: string;
@@ -96,8 +102,8 @@ export function Chat({
     },
   });
 
-  // @ts-expect-error - status is not typed
-  const isLoading = status === "in_progress";
+  // Consider anything except "ready" and "error" as busy/streaming
+  const isLoading = status !== "ready" && status !== "error";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,126 +137,200 @@ export function Chat({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-w-0 max-w-full overflow-x-hidden">
       {/* Messages area */}
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4 overflow-x-hidden">
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <p>Start a conversation by typing a message below.</p>
             </div>
           ) : (
-            messages.map((message: any) => (
-              <Card
-                key={message.id}
-                className={`p-4 ${
-                  message.role === "user"
-                    ? "ml-8 bg-primary text-primary-foreground"
-                    : "mr-8 bg-muted"
-                }`}
-              >
-                <div className="space-y-2">
-                  <div className="text-xs opacity-70 capitalize">
-                    {message.role}
-                  </div>
-                  <div>
-                    {message.role === "assistant" ? (
-                      <ReactMarkdown
-                        // @ts-expect-error - className is not typed correctly
-                        className="prose prose-sm max-w-none dark:prose-invert"
-                        components={{
-                          p: ({ children }) => (
-                            <p className="mb-2 last:mb-0">{children}</p>
-                          ),
-                          code: ({ children, className }) => {
-                            const isInline = !className;
-                            return isInline ? (
-                              <code className="bg-muted px-1 py-0.5 rounded text-sm">
-                                {children}
-                              </code>
-                            ) : (
-                              <code className="block bg-muted p-2 rounded text-sm overflow-x-auto">
-                                {children}
-                              </code>
-                            );
-                          },
-                          pre: ({ children }) => (
-                            <div className="bg-muted p-2 rounded overflow-x-auto">
-                              {children}
-                            </div>
-                          ),
-                        }}
-                      >
-                        {message.parts
-                          ? message.parts
-                              .map((part: any) => {
-                                switch (part.type) {
-                                  case "text":
-                                    return part.text;
-                                  case "reasoning":
-                                    return `*${part.reasoning}*`;
-                                  default:
-                                    return part.text || "";
-                                }
-                              })
-                              .join("")
-                          : message.content || ""}
-                      </ReactMarkdown>
-                    ) : (
-                      <div className="whitespace-pre-wrap">
-                        {message.parts ? (
-                          <div className="space-y-2">
-                            {message.parts.map((part: any, index: number) => {
-                              if (part.type === "text") {
-                                return <div key={index}>{part.text}</div>;
-                              }
-                              if (part.type === "file") {
-                                if (part.mediaType?.startsWith("image/")) {
-                                  return (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                      key={index}
-                                      src={part.url}
-                                      alt={part.filename || "Uploaded image"}
-                                      className="max-w-sm rounded-lg"
-                                    />
+            messages.map((message: any) => {
+              const assistantText =
+                message.role === "assistant"
+                  ? message.parts
+                    ? message.parts
+                        .map((part: any) => {
+                          switch (part.type) {
+                            case "text":
+                              return part.text;
+                            case "reasoning":
+                              return `*${part.reasoning}*`;
+                            default:
+                              return part.text || "";
+                          }
+                        })
+                        .join("")
+                    : message.content || ""
+                  : "";
+              const hasAssistantContent = assistantText.trim().length > 0;
+              return (
+                <>
+                  <Card
+                    key={message.id}
+                    className={`p-4 break-words max-w-full overflow-hidden ${
+                      message.role === "user"
+                        ? "ml-8 bg-primary text-primary-foreground"
+                        : "mr-8 bg-muted"
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="text-xs opacity-70 capitalize">
+                        {message.role}
+                      </div>
+                      <div>
+                        {message.role === "assistant" ? (
+                          hasAssistantContent ? (
+                            <ReactMarkdown
+                              // @ts-expect-error - className is not typed correctly
+                              className="prose prose-sm max-w-none dark:prose-invert break-words"
+                              components={{
+                                p: ({ children }) => (
+                                  <p className="mb-2 last:mb-0">{children}</p>
+                                ),
+                                code: ({ children, className }) => {
+                                  const isInline = !className;
+                                  return isInline ? (
+                                    <code className="bg-muted px-1 py-0.5 rounded text-sm">
+                                      {children}
+                                    </code>
+                                  ) : (
+                                    <code className="block bg-muted p-2 rounded text-sm overflow-x-auto">
+                                      {children}
+                                    </code>
                                   );
-                                }
-                                return (
-                                  <div
-                                    key={index}
-                                    className="flex items-center space-x-2 text-sm text-muted-foreground"
-                                  >
-                                    <File className="h-4 w-4" />
-                                    <span>{part.filename}</span>
+                                },
+                                pre: ({ children }) => (
+                                  <div className="bg-muted p-2 rounded overflow-x-auto max-w-full">
+                                    {children}
                                   </div>
-                                );
-                              }
-                              return null;
-                            })}
-                          </div>
+                                ),
+                              }}
+                            >
+                              {assistantText}
+                            </ReactMarkdown>
+                          ) : (
+                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                              <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                              <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                              <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                            </div>
+                          )
                         ) : (
-                          message.content || ""
+                          <div className="whitespace-pre-wrap break-words max-w-full overflow-hidden">
+                            {message.parts ? (
+                              <div className="space-y-2">
+                                {message.parts.map(
+                                  (part: any, index: number) => {
+                                    if (part.type === "text") {
+                                      return <div key={index}>{part.text}</div>;
+                                    }
+                                    if (part.type === "file") {
+                                      if (
+                                        part.mediaType?.startsWith("image/")
+                                      ) {
+                                        return (
+                                          // eslint-disable-next-line @next/next/no-img-element
+                                          <img
+                                            key={index}
+                                            src={part.url}
+                                            alt={
+                                              part.filename || "Uploaded image"
+                                            }
+                                            className="max-w-full h-auto rounded-lg"
+                                          />
+                                        );
+                                      }
+                                      return (
+                                        <div
+                                          key={index}
+                                          className="flex items-center space-x-2 text-sm text-muted-foreground"
+                                        >
+                                          <File className="h-4 w-4" />
+                                          <span>{part.filename}</span>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  }
+                                )}
+                              </div>
+                            ) : (
+                              message.content || ""
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))
-          )}
-
-          {isLoading && (
-            <Card className="mr-8 bg-muted p-4">
-              <div className="space-y-2">
-                <div className="text-xs opacity-70">Assistant</div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                </div>
-              </div>
-            </Card>
+                    </div>
+                  </Card>
+                  {message.role === "assistant" && hasAssistantContent && (
+                    <div className="mt-2 mr-8 flex items-center gap-1 text-muted-foreground">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Thumbs up"
+                        className="h-7 w-7 p-0"
+                        onClick={() => toast("Thanks for the feedback!")}
+                      >
+                        <ThumbsUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Thumbs down"
+                        className="h-7 w-7 p-0"
+                        onClick={() => toast("Thanks for the feedback!")}
+                      >
+                        <ThumbsDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Copy response"
+                        className="h-7 w-7 p-0"
+                        onClick={async () => {
+                          const copyText = message.parts
+                            ? message.parts
+                                .map((part: any) =>
+                                  part.type === "text"
+                                    ? part.text
+                                    : part.type === "reasoning"
+                                    ? `*${part.reasoning}*`
+                                    : part.text || ""
+                                )
+                                .join("")
+                            : message.content || "";
+                          try {
+                            await navigator.clipboard.writeText(copyText);
+                            toast("Copied response to clipboard");
+                          } catch {
+                            toast("Failed to copy", {
+                              description: "Clipboard error",
+                            });
+                          }
+                        }}
+                      >
+                        <CopyIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="More options"
+                        className="h-7 w-7 p-0 ml-1"
+                        onClick={() => toast("More options coming soon")}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </>
+              );
+            })
           )}
 
           {error && (
@@ -265,7 +345,7 @@ export function Chat({
       </ScrollArea>
 
       {/* Input area - Simple sticky */}
-      <div className="sticky bottom-0 z-20 bg-background border-t">
+      <div className="sticky bottom-0 z-20 bg-background border-t max-w-full overflow-x-hidden">
         <div className="p-4">
           {/* File preview */}
           {files && files.length > 0 && (
@@ -363,28 +443,30 @@ export function Chat({
                     type="button"
                     variant="outline"
                     size="icon"
-                    onClick={() => {
-                      console.log("Microphone clicked");
-                    }}
+                    onClick={() => toast("Realtime voice coming soon!")}
                     className="shrink-0"
+                    disabled={isLoading}
                   >
                     <Mic className="h-4 w-4" />
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={(!input.trim() && !files) || isLoading}
-                    size="icon"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                  {isLoading && (
+                  {isLoading ? (
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
                       onClick={stop}
+                      aria-label="Stop generating"
                     >
                       <Square className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={(!input.trim() && !files) || isLoading}
+                      size="icon"
+                      aria-label="Send message"
+                    >
+                      <Send className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -395,9 +477,7 @@ export function Chat({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    console.log("Globe clicked");
-                  }}
+                  onClick={() => toast("Web search coming soon!")}
                   className="h-7 px-2"
                 >
                   <Globe className="h-3 w-3" />
@@ -415,9 +495,16 @@ export function Chat({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    console.log("Wrench clicked");
-                  }}
+                  onClick={() => toast("Reasoning coming soon!")}
+                  className="h-7 px-2"
+                >
+                  <Brain className="h-3 w-3" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toast("Tools coming soon!")}
                   className="h-7 px-2"
                 >
                   <Wrench className="h-3 w-3" />
@@ -426,14 +513,12 @@ export function Chat({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    console.log("Wand clicked");
-                  }}
+                  onClick={() => toast("Transform with AI coming soon!")}
                   className="h-7 px-2"
                 >
                   <Wand className="h-3 w-3" />
                 </Button>
-                <div className="text-xs ml-auto flex items-center text-muted-foreground">
+                <div className="hidden md:flex text-xs ml-auto items-center text-muted-foreground">
                   Press Enter to send, Shift+Enter for new line
                 </div>
               </div>

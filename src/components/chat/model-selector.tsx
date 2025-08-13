@@ -32,7 +32,7 @@ export function ModelSelector({
       onValueChange={onModelChange}
       disabled={disabled}
     >
-      <SelectTrigger className="w-64">
+      <SelectTrigger>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

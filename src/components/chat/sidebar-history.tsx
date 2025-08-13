@@ -202,7 +202,7 @@ export function SidebarHistory({ userId }: SidebarHistoryProps) {
   }
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="p-2">
       <SidebarGroupLabel>Chat History</SidebarGroupLabel>
       <SidebarGroupContent>
         <div className="space-y-2">

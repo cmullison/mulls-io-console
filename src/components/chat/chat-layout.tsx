@@ -55,23 +55,21 @@ export function ChatLayout({
   };
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex h-full w-full min-w-0 overflow-x-hidden">
       {/* Chat Sidebar */}
       {sidebarOpen && (
-        <div className="w-80 h-full">
-          <ChatSidebar
-            isOpen={sidebarOpen}
-            onClose={() => handleSidebarToggle(false)}
-            userId={userId}
-          />
-        </div>
+        <ChatSidebar
+          isOpen={sidebarOpen}
+          onClose={() => handleSidebarToggle(false)}
+          userId={userId}
+        />
       )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header with toggle button */}
-        <div className="flex items-center justify-between h-12 p-4 border-b bg-background">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between h-12 p-4 border-b bg-background overflow-x-hidden">
+          <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
             <Button
               variant="ghost"
               size="sm"
@@ -81,19 +79,20 @@ export function ChatLayout({
               <Menu className="h-4 w-4" />
             </Button>
             {hasMessages ? (
-              <h1 className="text-lg font-semibold truncate">{chatTitle}</h1>
+              <h1 className="text-base md:text-lg font-semibold truncate max-w-full">
+                {chatTitle}
+              </h1>
             ) : (
-              <h1 className="text-lg font-semibold">New Chat</h1>
+              <h1 className="text-base md:text-lg font-semibold truncate max-w-full">
+                New Chat
+              </h1>
             )}
           </div>
           {hasMessages && chatModel ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium">
-                Model:{" "}
-                <span className="font-normal text-muted-foreground">
-                  {chatModels.find((m) => m.id === chatModel)?.name ||
-                    selectedModel}
-                </span>
+            <div className="flex items-center gap-3 max-w-[45%] md:max-w-none min-w-0 overflow-hidden">
+              <span className="text-xs md:text-sm text-muted-foreground truncate max-w-full">
+                {chatModels.find((m) => m.id === chatModel)?.name ||
+                  selectedModel}
               </span>
             </div>
           ) : !hasMessages ? (
@@ -120,7 +119,7 @@ export function ChatLayout({
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 z-40 md:hidden"
+          className="fixed inset-0 bg-black/20 z-40"
           onClick={() => handleSidebarToggle(false)}
         />
       )}
