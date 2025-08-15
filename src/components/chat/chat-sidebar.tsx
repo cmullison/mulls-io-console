@@ -31,7 +31,7 @@ export function ChatSidebar({ isOpen, onClose, userId }: ChatSidebarProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-80 bg-background border-r shadow-lg h-full">
+    <div className="w-80 bg-background border-r h-full shrink-0">
       <div className="flex h-full flex-col">
         {/* Header */}
         <div className="flex items-center justify-between h-12 p-4 border-b">

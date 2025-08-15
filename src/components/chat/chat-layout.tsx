@@ -116,13 +116,7 @@ export function ChatLayout({
         </div>
       </div>
 
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40"
-          onClick={() => handleSidebarToggle(false)}
-        />
-      )}
+      {/* Overlay removed to restore inline sidebar behavior */}
     </div>
   );
 }
